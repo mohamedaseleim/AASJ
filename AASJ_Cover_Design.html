@@ -1340,31 +1340,29 @@
 
 <script>
   function updateCover() {
-    var vol   = document.getElementById('ctrl-vol').value;
-    var issue = document.getElementById('ctrl-issue').value;
-    var month = document.getElementById('ctrl-month').value;
-    var year  = document.getElementById('ctrl-year').value;
+    const vol   = document.getElementById('ctrl-vol').value;
+    const issue = document.getElementById('ctrl-issue').value;
+    const month = document.getElementById('ctrl-month').value;
+    const year  = document.getElementById('ctrl-year').value;
+    const dot   = '\u00a0\u00b7\u00a0'; // non-breaking space · non-breaking space
 
     // Front cover — volume ribbon
-    document.getElementById('cover-vol-text').innerHTML =
-      'Volume ' + vol + ' &nbsp;&middot;&nbsp; Issue ' + issue;
-    document.getElementById('cover-vol-date').textContent = month + ' ' + year;
+    document.getElementById('cover-vol-text').textContent =
+      `Volume ${vol}${dot}Issue ${issue}`;
+    document.getElementById('cover-vol-date').textContent = `${month} ${year}`;
 
     // Front cover — image caption
     document.getElementById('caption-vol-info').textContent =
-      'AASJ Vol.' + vol + ' No.' + issue + ' \u00B7 ' + year;
+      `AASJ Vol.${vol} No.${issue} \u00b7 ${year}`;
 
     // Spine
-    document.getElementById('spine-text').innerHTML =
-      'AASJ &nbsp;&middot;&nbsp; VOL. ' + vol +
-      ' &nbsp;&middot;&nbsp; NO. ' + issue +
-      ' &nbsp;&middot;&nbsp; ' + year +
-      ' &nbsp;&middot;&nbsp; Archives of Agriculture Sciences Journal';
+    document.getElementById('spine-text').textContent =
+      `AASJ${dot}VOL. ${vol}${dot}NO. ${issue}${dot}${year}${dot}Archives of Agriculture Sciences Journal`;
 
     // TOC page — volume badge
     document.getElementById('toc-vol-main').textContent =
-      'Vol. ' + vol + ' \u00B7 No. ' + issue;
-    document.getElementById('toc-vol-date').textContent = month + ' ' + year;
+      `Vol. ${vol} \u00b7 No. ${issue}`;
+    document.getElementById('toc-vol-date').textContent = `${month} ${year}`;
   }
 </script>
 
