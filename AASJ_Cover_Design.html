@@ -2047,11 +2047,56 @@
     return articles;
   }
 
+  /* Fetch a URL through one CORS proxy entry, with a timeout.
+     Each proxy entry is { label, getUrl(encodedTarget), extractText(response) } */
+  async function fetchViaProxy(proxy, encodedTarget, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(proxy.getUrl(encodedTarget), {
+        cache: 'no-store',
+        signal: controller.signal
+      });
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status + ' – ' + response.statusText);
+      }
+      return await proxy.extractText(response);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   /* Main function: fetch XML and populate TOC */
   async function loadContentsFromXml() {
     const MAX_PARSE_ERR_LEN = 120;
-    const urlEl   = document.getElementById('ctrl-xml-url');
-    const btn     = document.getElementById('ctrl-xml-btn');
+    const PROXY_TIMEOUT_MS  = 15000;
+
+    // Public CORS proxies tried in order — required for cross-origin requests from
+    // a local file. Note: the XML URL is forwarded; avoid using for confidential content.
+    const PROXIES = [
+      {
+        label: 'allorigins (raw)',
+        getUrl: enc => 'https://api.allorigins.win/raw?url=' + enc,
+        extractText: r => r.text()
+      },
+      {
+        label: 'corsproxy.io',
+        getUrl: enc => 'https://corsproxy.io/?' + enc,
+        extractText: r => r.text()
+      },
+      {
+        label: 'allorigins (json)',
+        getUrl: enc => 'https://api.allorigins.win/get?url=' + enc,
+        extractText: async r => {
+          const json = await r.json();
+          if (!json || json.contents == null) throw new Error('Missing or invalid contents field in allorigins response.');
+          return json.contents;
+        }
+      }
+    ];
+
+    const urlEl    = document.getElementById('ctrl-xml-url');
+    const btn      = document.getElementById('ctrl-xml-btn');
     const urlInput = urlEl ? urlEl.value.trim() : '';
 
     if (!urlInput) {
@@ -2060,22 +2105,32 @@
     }
 
     if (btn) btn.disabled = true;
-    showXmlStatus('⏳ جاري التحميل… (Loading…)', 'loading');
+
+    const encoded = encodeURIComponent(urlInput);
+    let xmlText = null;
+    let lastError = null;
+
+    for (let i = 0; i < PROXIES.length; i++) {
+      const proxy = PROXIES[i];
+      showXmlStatus(
+        '⏳ جاري التحميل… (Trying proxy ' + (i + 1) + '/' + PROXIES.length + ': ' + proxy.label + ')',
+        'loading'
+      );
+      try {
+        const text = await fetchViaProxy(proxy, encoded, PROXY_TIMEOUT_MS);
+        if (!text || !text.trim()) throw new Error('The server returned an empty response.');
+        xmlText = text;
+        break;
+      } catch (err) {
+        lastError = err;
+      }
+    }
 
     try {
-      // Public CORS proxy — required for cross-origin requests from a local file.
-      // Note: the XML URL is forwarded through allorigins.win; avoid using this
-      // for confidential content.
-      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(urlInput);
-      const response = await fetch(proxyUrl, { cache: 'no-store' });
-
-      if (!response.ok) {
-        throw new Error('HTTP ' + response.status + ' – ' + response.statusText);
-      }
-
-      const xmlText = await response.text();
-      if (!xmlText || !xmlText.trim()) {
-        throw new Error('The server returned an empty response.');
+      if (!xmlText) {
+        throw new Error(
+          'Failed to fetch via all proxies. Last error: ' + (lastError?.message || 'unknown')
+        );
       }
 
       const parser = new DOMParser();
