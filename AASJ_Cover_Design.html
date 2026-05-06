@@ -651,18 +651,70 @@
         </div>
         <div class="header-right">
           <div class="azhar-logo">
-            <svg viewBox="0 0 80 80" width="46" height="46" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="40" cy="40" r="37" fill="#0a2410" stroke="rgba(201,148,26,0.5)" stroke-width="1.5"/>
-              <circle cx="40" cy="40" r="27" fill="none" stroke="rgba(201,148,26,0.25)" stroke-width="0.8"/>
-              <!-- Minaret -->
-              <rect x="37.5" y="22" width="5" height="18" fill="#C9941A" rx="1"/>
-              <polygon points="40,16 34,24 46,24" fill="#C9941A"/>
-              <rect x="35" y="22" width="2" height="3" fill="#0a2410"/>
-              <rect x="43" y="22" width="2" height="3" fill="#0a2410"/>
-              <!-- Book -->
-              <path d="M27 43 Q40 38 53 43 L53 52 Q40 47 27 52 Z" fill="rgba(255,255,255,0.82)"/>
-              <line x1="40" y1="38" x2="40" y2="52" stroke="#0a2410" stroke-width="0.8"/>
-              <text x="40" y="64" text-anchor="middle" fill="rgba(201,148,26,0.7)" font-size="5.5" font-family="sans-serif" font-weight="bold">AL-AZHAR</text>
+            <svg viewBox="0 0 100 100" width="46" height="46" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <!-- Arabic text arc: right-to-left across the top (sweep=0 = CCW in SVG) -->
+                <path id="azf-ar" d="M 77.6,17.1 A 43,43 0 0,0 22.4,17.1"/>
+                <!-- English text arc: left-to-right across the bottom -->
+                <path id="azf-en" d="M 22.4,82.9 A 43,43 0 0,0 77.6,82.9"/>
+                <clipPath id="azf-cl"><circle cx="50" cy="50" r="49"/></clipPath>
+              </defs>
+              <g clip-path="url(#azf-cl)">
+                <!-- Cream background -->
+                <circle cx="50" cy="50" r="49" fill="#f0ead0"/>
+                <!-- Dark green outer ring -->
+                <circle cx="50" cy="50" r="45" fill="none" stroke="#1e5c2c" stroke-width="8"/>
+                <!-- Gold divider rings -->
+                <circle cx="50" cy="50" r="41.3" fill="none" stroke="#9b7a28" stroke-width="0.7"/>
+                <circle cx="50" cy="50" r="48.5" fill="none" stroke="#9b7a28" stroke-width="0.6"/>
+                <!-- Arabic text: جامعة الأزهر -->
+                <text direction="rtl" fill="#f0ead0" font-size="7.5" font-family="Arial,Tahoma,sans-serif" font-weight="bold">
+                  <textPath href="#azf-ar" startOffset="50%" text-anchor="middle">جامعة الأزهر</textPath>
+                </text>
+                <!-- English text: AL-AZHAR UNIVERSITY -->
+                <text fill="#f0ead0" font-size="4.5" font-family="Georgia,serif" font-weight="bold" letter-spacing="0.3">
+                  <textPath href="#azf-en" startOffset="50%" text-anchor="middle">AL-AZHAR UNIVERSITY</textPath>
+                </text>
+                <!-- Left minaret shaft -->
+                <rect x="26" y="22" width="4" height="29" fill="#1e5c2c"/>
+                <!-- Left minaret cap -->
+                <polygon points="28,15 23,23 33,23" fill="#1e5c2c"/>
+                <!-- Left minaret balcony -->
+                <rect x="23.5" y="34" width="9" height="1.5" fill="#1e5c2c"/>
+                <!-- Left minaret finial -->
+                <line x1="28" y1="15" x2="28" y2="11" stroke="#9b7a28" stroke-width="1.2"/>
+                <circle cx="28" cy="10.5" r="1.3" fill="#9b7a28"/>
+                <!-- Right minaret shaft -->
+                <rect x="70" y="22" width="4" height="29" fill="#1e5c2c"/>
+                <!-- Right minaret cap -->
+                <polygon points="72,15 67,23 77,23" fill="#1e5c2c"/>
+                <!-- Right minaret balcony -->
+                <rect x="67.5" y="34" width="9" height="1.5" fill="#1e5c2c"/>
+                <!-- Right minaret finial -->
+                <line x1="72" y1="15" x2="72" y2="11" stroke="#9b7a28" stroke-width="1.2"/>
+                <circle cx="72" cy="10.5" r="1.3" fill="#9b7a28"/>
+                <!-- Main building body -->
+                <rect x="33" y="44" width="34" height="7" fill="#1e5c2c"/>
+                <!-- Central dome -->
+                <path d="M 42,44 Q 42,29 50,28 Q 58,29 58,44 Z" fill="#1e5c2c"/>
+                <!-- Dome finial -->
+                <line x1="50" y1="28" x2="50" y2="24" stroke="#9b7a28" stroke-width="1.2"/>
+                <circle cx="50" cy="23.5" r="1.4" fill="#9b7a28"/>
+                <!-- Arch windows -->
+                <path d="M 35.5,51 Q 35.5,46 38.5,46 Q 41.5,46 41.5,51 Z" fill="#f0ead0"/>
+                <path d="M 46.5,51 Q 46.5,46 50,46 Q 53.5,46 53.5,51 Z" fill="#f0ead0"/>
+                <path d="M 58.5,51 Q 58.5,46 61.5,46 Q 64.5,46 64.5,51 Z" fill="#f0ead0"/>
+                <!-- Platform bar -->
+                <rect x="27" y="50.5" width="46" height="1.5" fill="#9b7a28"/>
+                <!-- Open book (Quran) - left page -->
+                <path d="M 33,54 C 33,52 50,50 50,50 L 50,62 C 50,62 33,66 33,64 Z" fill="#f0ead0" stroke="#9b7a28" stroke-width="0.5"/>
+                <!-- Open book - right page -->
+                <path d="M 67,54 C 67,52 50,50 50,50 L 50,62 C 50,62 67,66 67,64 Z" fill="#f0ead0" stroke="#9b7a28" stroke-width="0.5"/>
+                <!-- Book spine -->
+                <line x1="50" y1="50" x2="50" y2="62" stroke="#9b7a28" stroke-width="0.9"/>
+                <!-- Book base curve -->
+                <path d="M 33,64 Q 50,68 67,64" fill="none" stroke="#9b7a28" stroke-width="0.5"/>
+              </g>
             </svg>
           </div>
           <div class="issn-block">
@@ -1086,15 +1138,46 @@
 
     <div class="back-header">
       <div class="back-logo-ring">
-        <svg width="54" height="54" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-          <rect x="36" y="50" width="8" height="22" fill="#C9941A" rx="2"/>
-          <circle cx="24" cy="42" r="14" fill="#2E7D32"/>
-          <circle cx="18" cy="32" r="10" fill="#388E3C"/>
-          <circle cx="28" cy="26" r="12" fill="#2E7D32"/>
-          <circle cx="56" cy="42" r="14" fill="#C9941A"/>
-          <circle cx="62" cy="32" r="10" fill="#E8B84B"/>
-          <circle cx="52" cy="26" r="12" fill="#C9941A"/>
-          <circle cx="40" cy="20" r="12" fill="#2E7D32"/>
+        <svg viewBox="0 0 100 100" width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <path id="azb-ar" d="M 77.6,17.1 A 43,43 0 0,0 22.4,17.1"/>
+            <path id="azb-en" d="M 22.4,82.9 A 43,43 0 0,0 77.6,82.9"/>
+            <clipPath id="azb-cl"><circle cx="50" cy="50" r="49"/></clipPath>
+          </defs>
+          <g clip-path="url(#azb-cl)">
+            <circle cx="50" cy="50" r="49" fill="#f0ead0"/>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#1e5c2c" stroke-width="8"/>
+            <circle cx="50" cy="50" r="41.3" fill="none" stroke="#9b7a28" stroke-width="0.7"/>
+            <circle cx="50" cy="50" r="48.5" fill="none" stroke="#9b7a28" stroke-width="0.6"/>
+            <text direction="rtl" fill="#f0ead0" font-size="7.5" font-family="Arial,Tahoma,sans-serif" font-weight="bold">
+              <textPath href="#azb-ar" startOffset="50%" text-anchor="middle">جامعة الأزهر</textPath>
+            </text>
+            <text fill="#f0ead0" font-size="4.5" font-family="Georgia,serif" font-weight="bold" letter-spacing="0.3">
+              <textPath href="#azb-en" startOffset="50%" text-anchor="middle">AL-AZHAR UNIVERSITY</textPath>
+            </text>
+            <rect x="26" y="22" width="4" height="29" fill="#1e5c2c"/>
+            <polygon points="28,15 23,23 33,23" fill="#1e5c2c"/>
+            <rect x="23.5" y="34" width="9" height="1.5" fill="#1e5c2c"/>
+            <line x1="28" y1="15" x2="28" y2="11" stroke="#9b7a28" stroke-width="1.2"/>
+            <circle cx="28" cy="10.5" r="1.3" fill="#9b7a28"/>
+            <rect x="70" y="22" width="4" height="29" fill="#1e5c2c"/>
+            <polygon points="72,15 67,23 77,23" fill="#1e5c2c"/>
+            <rect x="67.5" y="34" width="9" height="1.5" fill="#1e5c2c"/>
+            <line x1="72" y1="15" x2="72" y2="11" stroke="#9b7a28" stroke-width="1.2"/>
+            <circle cx="72" cy="10.5" r="1.3" fill="#9b7a28"/>
+            <rect x="33" y="44" width="34" height="7" fill="#1e5c2c"/>
+            <path d="M 42,44 Q 42,29 50,28 Q 58,29 58,44 Z" fill="#1e5c2c"/>
+            <line x1="50" y1="28" x2="50" y2="24" stroke="#9b7a28" stroke-width="1.2"/>
+            <circle cx="50" cy="23.5" r="1.4" fill="#9b7a28"/>
+            <path d="M 35.5,51 Q 35.5,46 38.5,46 Q 41.5,46 41.5,51 Z" fill="#f0ead0"/>
+            <path d="M 46.5,51 Q 46.5,46 50,46 Q 53.5,46 53.5,51 Z" fill="#f0ead0"/>
+            <path d="M 58.5,51 Q 58.5,46 61.5,46 Q 64.5,46 64.5,51 Z" fill="#f0ead0"/>
+            <rect x="27" y="50.5" width="46" height="1.5" fill="#9b7a28"/>
+            <path d="M 33,54 C 33,52 50,50 50,50 L 50,62 C 50,62 33,66 33,64 Z" fill="#f0ead0" stroke="#9b7a28" stroke-width="0.5"/>
+            <path d="M 67,54 C 67,52 50,50 50,50 L 50,62 C 50,62 67,66 67,64 Z" fill="#f0ead0" stroke="#9b7a28" stroke-width="0.5"/>
+            <line x1="50" y1="50" x2="50" y2="62" stroke="#9b7a28" stroke-width="0.9"/>
+            <path d="M 33,64 Q 50,68 67,64" fill="none" stroke="#9b7a28" stroke-width="0.5"/>
+          </g>
         </svg>
       </div>
       <div class="back-title-block">
