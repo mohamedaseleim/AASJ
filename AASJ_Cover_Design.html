@@ -991,7 +991,7 @@
   <div class="ctrl-row">
     <span class="ctrl-label">Aims &amp; Scope</span>
     <textarea id="ctrl-aims-text" class="ctrl-textarea" rows="4"
-      oninput="updateBackContent()">Archives of Agriculture Sciences Journal (AASJ) is a peer-reviewed, open-access journal dedicated to publishing original research, reviews, and scientific communications in all fields of agricultural and biological sciences. AASJ promotes scientific excellence and sustainable agricultural development across regional and global contexts.</textarea>
+      oninput="updateBackContent()"></textarea>
   </div>
 
   <!-- Scope tags (comma-separated) -->
@@ -999,7 +999,6 @@
     <span class="ctrl-label">Scope Tags</span>
     <input id="ctrl-scope-tags" class="ctrl-input" type="text"
       oninput="updateBackContent()"
-      value="Crop Science, Soil &amp; Water, Plant Genetics, Animal Sciences, Agronomy, Biotechnology, Food Science, Agroecology, Plant Pathology, Horticulture"
       style="max-width:720px;">
     <span style="font-size:9px;color:rgba(255,255,255,0.35);padding-top:6px;">comma-separated</span>
   </div>
@@ -1012,11 +1011,11 @@
       <div class="info-card-edit-name">Frequency</div>
       <div class="info-card-edit-row">
         <span class="info-card-edit-row-label">Value</span>
-        <input id="ctrl-val-frequency" class="ctrl-input" type="text" value="Quarterly" oninput="updateBackContent()">
+        <input id="ctrl-val-frequency" class="ctrl-input" type="text" oninput="updateBackContent()">
       </div>
       <div class="info-card-edit-row">
         <span class="info-card-edit-row-label">Sub</span>
-        <input id="ctrl-sub-frequency" class="ctrl-input" type="text" value="4 issues per year" oninput="updateBackContent()">
+        <input id="ctrl-sub-frequency" class="ctrl-input" type="text" oninput="updateBackContent()">
       </div>
     </div>
 
@@ -1024,11 +1023,11 @@
       <div class="info-card-edit-name">Access</div>
       <div class="info-card-edit-row">
         <span class="info-card-edit-row-label">Value</span>
-        <input id="ctrl-val-access" class="ctrl-input" type="text" value="Open Access" oninput="updateBackContent()">
+        <input id="ctrl-val-access" class="ctrl-input" type="text" oninput="updateBackContent()">
       </div>
       <div class="info-card-edit-row">
         <span class="info-card-edit-row-label">Sub</span>
-        <input id="ctrl-sub-access" class="ctrl-input" type="text" value="Free to read &amp; download" oninput="updateBackContent()">
+        <input id="ctrl-sub-access" class="ctrl-input" type="text" oninput="updateBackContent()">
       </div>
     </div>
 
@@ -1036,11 +1035,11 @@
       <div class="info-card-edit-name">Indexed In</div>
       <div class="info-card-edit-row">
         <span class="info-card-edit-row-label">Value</span>
-        <input id="ctrl-val-indexed" class="ctrl-input" type="text" value="EKB · DOAJ" oninput="updateBackContent()">
+        <input id="ctrl-val-indexed" class="ctrl-input" type="text" oninput="updateBackContent()">
       </div>
       <div class="info-card-edit-row">
         <span class="info-card-edit-row-label">Sub</span>
-        <input id="ctrl-sub-indexed" class="ctrl-input" type="text" value="Scopus under evaluation" oninput="updateBackContent()">
+        <input id="ctrl-sub-indexed" class="ctrl-input" type="text" oninput="updateBackContent()">
       </div>
     </div>
 
@@ -1048,11 +1047,11 @@
       <div class="info-card-edit-name">Peer Review</div>
       <div class="info-card-edit-row">
         <span class="info-card-edit-row-label">Value</span>
-        <input id="ctrl-val-review" class="ctrl-input" type="text" value="Double-Blind" oninput="updateBackContent()">
+        <input id="ctrl-val-review" class="ctrl-input" type="text" oninput="updateBackContent()">
       </div>
       <div class="info-card-edit-row">
         <span class="info-card-edit-row-label">Sub</span>
-        <input id="ctrl-sub-review" class="ctrl-input" type="text" value="International standards" oninput="updateBackContent()">
+        <input id="ctrl-sub-review" class="ctrl-input" type="text" oninput="updateBackContent()">
       </div>
     </div>
 
@@ -1060,11 +1059,11 @@
       <div class="info-card-edit-name">Established</div>
       <div class="info-card-edit-row">
         <span class="info-card-edit-row-label">Value</span>
-        <input id="ctrl-val-established" class="ctrl-input" type="text" value="Since 2018" oninput="updateBackContent()">
+        <input id="ctrl-val-established" class="ctrl-input" type="text" oninput="updateBackContent()">
       </div>
       <div class="info-card-edit-row">
         <span class="info-card-edit-row-label">Sub</span>
-        <input id="ctrl-sub-established" class="ctrl-input" type="text" value="Vol.1 No.1 · 2018" oninput="updateBackContent()">
+        <input id="ctrl-sub-established" class="ctrl-input" type="text" oninput="updateBackContent()">
       </div>
     </div>
 
@@ -1072,11 +1071,11 @@
       <div class="info-card-edit-name">Language</div>
       <div class="info-card-edit-row">
         <span class="info-card-edit-row-label">Value</span>
-        <input id="ctrl-val-language" class="ctrl-input" type="text" value="English" oninput="updateBackContent()">
+        <input id="ctrl-val-language" class="ctrl-input" type="text" oninput="updateBackContent()">
       </div>
       <div class="info-card-edit-row">
         <span class="info-card-edit-row-label">Sub</span>
-        <input id="ctrl-sub-language" class="ctrl-input" type="text" value="Arabic abstracts available" oninput="updateBackContent()">
+        <input id="ctrl-sub-language" class="ctrl-input" type="text" oninput="updateBackContent()">
       </div>
     </div>
 
@@ -1774,13 +1773,12 @@
     const tagsContainer = document.getElementById('scope-tags-container');
     const tagsRaw = document.getElementById('ctrl-scope-tags').value;
     const tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0);
-    tagsContainer.innerHTML = '';
-    tags.forEach(tag => {
+    tagsContainer.replaceChildren(...tags.map(tag => {
       const span = document.createElement('span');
       span.className = 'tag';
       span.textContent = tag;
-      tagsContainer.appendChild(span);
-    });
+      return span;
+    }));
 
     // Journal Information cards
     const fields = ['frequency', 'access', 'indexed', 'review', 'established', 'language'];
@@ -1793,6 +1791,27 @@
       if (subEl && subInput) subEl.textContent = subInput.value;
     });
   }
+
+  // Initialize back-cover controls from the existing display content (single source of truth)
+  document.addEventListener('DOMContentLoaded', function () {
+    // Aims & Scope text
+    document.getElementById('ctrl-aims-text').value =
+      document.getElementById('scope-text-content').textContent.trim();
+
+    // Scope tags → comma-separated string
+    const tagSpans = document.getElementById('scope-tags-container').querySelectorAll('.tag');
+    document.getElementById('ctrl-scope-tags').value =
+      Array.from(tagSpans).map(s => s.textContent.trim()).join(', ');
+
+    // Journal Information cards
+    const fields = ['frequency', 'access', 'indexed', 'review', 'established', 'language'];
+    fields.forEach(key => {
+      const valEl = document.getElementById('info-val-' + key);
+      const subEl = document.getElementById('info-sub-' + key);
+      if (valEl) document.getElementById('ctrl-val-' + key).value = valEl.textContent.trim();
+      if (subEl) document.getElementById('ctrl-sub-' + key).value = subEl.textContent.trim();
+    });
+  });
 </script>
 
 </body>
