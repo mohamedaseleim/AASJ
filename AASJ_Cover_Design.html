@@ -1883,7 +1883,7 @@
   }
 
   function getNormalizedXmlName(node) {
-    const rawName = node ? (node.localName || node.baseName || node.tagName || node.nodeName || '') : '';
+    const rawName = node ? (node.localName || node.tagName || node.nodeName || '') : '';
     return String(rawName).split(':').pop().toLowerCase();
   }
 
@@ -1899,6 +1899,8 @@
     return '';
   }
 
+  /* Split keyword lists exported either as repeated lines or combined
+     semicolon/pipe-delimited strings used by some EKB feeds. */
   function splitXmlListText(text) {
     return (text || '')
       .split(/(?:\s*[;\n|]\s*)+/)
@@ -2180,7 +2182,7 @@
           ...getElsByTag(art, 'author_name')
         ]
           .filter(a => {
-            const parentName = getNormalizedXmlName(a.parentNode);
+            const parentName = a.parentNode ? getNormalizedXmlName(a.parentNode) : '';
             return parentName !== 'author' && parentName !== 'contrib';
           })
           .map(a => a.textContent.trim())
@@ -2237,7 +2239,7 @@
         ...getElsByTag(art, 'keywords').flatMap(k => splitXmlListText(k.textContent)),
         ...splitXmlListText(getTextContent(art, ['keywordlist', 'keyword_list']))
       ].filter(Boolean);
-      // Array.from(new Set(...)) removes duplicates while keeping unique keywords in insertion order.
+      // Removes duplicate keywords while preserving insertion order.
       keywords = Array.from(new Set(keywords));
     }
 
