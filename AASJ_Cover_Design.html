@@ -2014,8 +2014,8 @@
   }
 
   const MAX_XML_TAG_NAME_LENGTH = 120;
-  const XML_TEXT_PATTERN = new RegExp('<\\?xml\\b|<\\/?[A-Za-z_][\\w:.-]{0,' + MAX_XML_TAG_NAME_LENGTH + '}', 'i');
-  const ESCAPED_XML_TEXT_PATTERN = new RegExp('&lt;\\?xml\\b|&lt;\\/?[A-Za-z_][\\w:.-]{0,' + MAX_XML_TAG_NAME_LENGTH + '}', 'i');
+  const XML_TEXT_PATTERN = new RegExp(`<\\?xml\\b|<\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_NAME_LENGTH}}`, 'i');
+  const ESCAPED_XML_TEXT_PATTERN = new RegExp(`&lt;\\?xml\\b|&lt;\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_NAME_LENGTH}}`, 'i');
 
   function decodeHtmlEntities(text) {
     const htmlDoc = new DOMParser().parseFromString(text || '', 'text/html');
@@ -2042,10 +2042,18 @@
              ? xmlDoc.documentElement : null);
   }
 
+  function formatXmlParseErrorText(parseErr, maxParseErrLen) {
+    const text = parseErr ? (parseErr.textContent || '').trim() : '';
+    if (!text) return 'Unknown XML parser error.';
+    return text.length > maxParseErrLen
+      ? text.slice(0, maxParseErrLen) + '...'
+      : text;
+  }
+
   function extractXmlCandidatesFromHtml(rawText) {
     const htmlDoc = new DOMParser().parseFromString(rawText, 'text/html');
     const candidates = [];
-    const pushCandidate = text => {
+    const collectXmlCandidate = text => {
       const normalized = sanitizeXmlText(text);
       if (!normalized) return;
       if (looksLikeXmlText(normalized) || looksLikeEscapedXmlText(normalized)) {
@@ -2055,14 +2063,14 @@
 
     ['pre', 'code', 'xmp', 'textarea'].forEach(selector => {
       htmlDoc.querySelectorAll(selector).forEach(el => {
-        pushCandidate(el.textContent);
-        pushCandidate(el.innerHTML);
+        collectXmlCandidate(el.textContent);
+        collectXmlCandidate(el.innerHTML);
       });
     });
 
     if (htmlDoc.body) {
-      pushCandidate(htmlDoc.body.textContent);
-      pushCandidate(htmlDoc.body.innerHTML);
+      collectXmlCandidate(htmlDoc.body.textContent);
+      collectXmlCandidate(htmlDoc.body.innerHTML);
     }
 
     return candidates;
@@ -2220,7 +2228,7 @@
     let lastParseError = null;
     let fallbackResult = null;
 
-    const addCandidate = candidateText => {
+    const registerXmlCandidate = candidateText => {
       const normalized = sanitizeXmlText(candidateText);
       if (!normalized) return;
       if (seen.has(normalized)) return;
@@ -2231,9 +2239,9 @@
     const addTextWithDecodedVariant = candidateText => {
       const normalized = sanitizeXmlText(candidateText);
       if (!normalized) return;
-      addCandidate(normalized);
+      registerXmlCandidate(normalized);
       if (looksLikeEscapedXmlText(normalized)) {
-        addCandidate(decodeHtmlEntities(normalized));
+        registerXmlCandidate(decodeHtmlEntities(normalized));
       }
     };
 
@@ -2251,7 +2259,7 @@
       const xmlDoc = parser.parseFromString(candidate, 'application/xml');
       const parseErr = getXmlParseError(xmlDoc);
       if (parseErr) {
-        lastParseError = new Error('XML parse error: ' + parseErr.textContent.slice(0, maxParseErrLen));
+        lastParseError = new Error('XML parse error: ' + formatXmlParseErrorText(parseErr, maxParseErrLen));
         continue;
       }
 
@@ -2266,7 +2274,10 @@
 
     if (fallbackResult) return fallbackResult;
     if (lastParseError) throw lastParseError;
-    throw new Error('XML parse error: unable to detect valid XML content.');
+    throw new Error(
+      'XML parse error: unable to detect valid XML content after trying ' +
+      candidates.length + ' candidate(s) from ' + (htmlLike ? 'HTML-wrapped' : 'raw') + ' input.'
+    );
   }
 
   /* Fetch a URL through one CORS proxy entry, with a timeout.
