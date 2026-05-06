@@ -2019,7 +2019,8 @@
   }
 
   /* Helper: collect all descendant elements matching a tag name in any namespace,
-     ignoring case and namespace prefixes. */
+     ignoring case and namespace prefixes. This does a linear scan of descendants
+     so mixed-case EKB/OJS/JATS tags are matched consistently. */
   function getElsByTag(parent, tagName) {
     const wanted = String(tagName || '').toLowerCase();
     if (!wanted || !parent || !parent.getElementsByTagName) return [];
@@ -2156,7 +2157,13 @@
         authorNames = [
           ...getElsByTag(art, 'authorname'),
           ...getElsByTag(art, 'author_name')
-        ].map(a => a.textContent.trim()).filter(Boolean);
+        ]
+          .filter(a => {
+            const parentName = getNormalizedXmlName(a.parentNode);
+            return parentName !== 'author' && parentName !== 'contrib';
+          })
+          .map(a => a.textContent.trim())
+          .filter(Boolean);
       }
       authors = authorNames.join(', ') || getTextContent(art, ['authors', 'authornames', 'author_names']);
 
@@ -2209,6 +2216,7 @@
         ...getElsByTag(art, 'keywords').flatMap(k => splitXmlListText(k.textContent)),
         ...splitXmlListText(getTextContent(art, ['keywordlist', 'keyword_list']))
       ].filter(Boolean);
+      // Array.from(new Set(...)) preserves first-seen keyword order while removing duplicates.
       keywords = Array.from(new Set(keywords));
     }
 
