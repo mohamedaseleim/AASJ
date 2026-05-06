@@ -765,6 +765,47 @@
     width: 28px;
     flex-shrink: 0;
   }
+
+  /* ── XML Contents Loader ── */
+  .xml-load-controls {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px 24px;
+    background: #1f2937;
+    border-bottom: 2px solid #C9941A;
+    margin-bottom: 32px;
+    box-sizing: border-box;
+  }
+  .ctrl-btn {
+    background: #C9941A;
+    color: #0D3B1F;
+    border: none;
+    border-radius: 3px;
+    padding: 7px 20px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .ctrl-btn:hover  { background: #E8B84B; }
+  .ctrl-btn:active { background: #a87614; }
+  .ctrl-btn:disabled { background: #555; color: #999; cursor: not-allowed; }
+  .xml-status {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    padding: 7px 12px;
+    border-radius: 3px;
+    background: rgba(13,59,31,0.4);
+    border: 1px solid rgba(201,148,26,0.2);
+    display: none;
+  }
+  .xml-status.success { color: #4ade80; border-color: rgba(74,222,128,0.3);  background: rgba(74,222,128,0.05);  }
+  .xml-status.error   { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.05); }
+  .xml-status.loading { color: #fbbf24; border-color: rgba(251,191,36,0.3);  background: rgba(251,191,36,0.05);  }
 </style>
 </head>
 <body>
@@ -1080,6 +1121,21 @@
     </div>
 
   </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     TOC CONTENTS — Auto-generate from XML
+════════════════════════════════════════════ -->
+<div class="xml-load-controls">
+  <div class="controls-title">◆ Load Contents from XML</div>
+  <div class="ctrl-row" style="align-items:center;">
+    <span class="ctrl-label">XML URL</span>
+    <input id="ctrl-xml-url" class="ctrl-input" type="text"
+      placeholder="https://aasj.journals.ekb.eg/?_action=xml&amp;issue=59458"
+      style="flex:1; max-width:620px;">
+    <button id="ctrl-xml-btn" class="ctrl-btn" onclick="loadContentsFromXml()">Load Contents</button>
+  </div>
+  <div id="xml-status" class="xml-status"></div>
 </div>
 
 
@@ -1426,6 +1482,7 @@
     </div>
 
     <!-- ── SECTION: RESEARCH ARTICLES ── -->
+    <div id="toc-contents-area">
     <div class="toc-section-label">Research Articles</div>
 
     <div class="toc-articles">
@@ -1558,6 +1615,8 @@
       </div>
 
     </div>
+
+    </div><!-- /toc-contents-area -->
 
     <!-- TOC FOOTER -->
     <div class="toc-footer">
@@ -1798,6 +1857,252 @@
       if (subEl) document.getElementById('ctrl-sub-' + key).value = subEl.textContent.trim();
     });
   });
+
+  /* ══════════════════════════════════════════════════
+     XML CONTENTS LOADER
+  ══════════════════════════════════════════════════ */
+
+  function showXmlStatus(msg, type) {
+    const el = document.getElementById('xml-status');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'xml-status' + (type ? ' ' + type : '');
+    el.style.display = 'block';
+  }
+
+  /* Safely get trimmed text content of first matching child element */
+  function getTextContent(el, tagNames) {
+    for (const tag of tagNames) {
+      // Try direct querySelector (works for simple names)
+      try {
+        const found = el.querySelector(tag);
+        if (found) return found.textContent.trim();
+      } catch (e) { /* ignore invalid CSS selector names from XML */ }
+    }
+    return '';
+  }
+
+  /* Determine article type from raw string */
+  function normalizeArticleType(typeRaw) {
+    const lower = (typeRaw || '').toLowerCase();
+    if (lower.includes('review')) return 'review';
+    return 'original';
+  }
+
+  /* Escape HTML special characters */
+  function escapeHtml(str) {
+    return (str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* Build HTML for a single TOC article row */
+  function buildArticleHtml(art, num) {
+    const numStr  = String(num).padStart(2, '0');
+    const typeClass = art.type === 'review' ? 'review' : 'original';
+    const typeLabel = art.type === 'review' ? 'Review' : 'Original Research';
+
+    // Pages: prefer fpage–lpage, else fallback to Article ID (last number in DOI)
+    let pagesLabel, pagesValue;
+    if (art.fpage || art.lpage) {
+      pagesLabel = 'Pages';
+      pagesValue = art.fpage && art.lpage
+        ? art.fpage + ' \u2013 ' + art.lpage
+        : (art.fpage || art.lpage);
+    } else {
+      pagesLabel  = 'Article ID';
+      pagesValue  = art.articleId || '\u2014';
+    }
+
+    const kwHtml = art.keywords.length
+      ? '<div class="art-keywords">' +
+          art.keywords.map(k => '<span class="art-kw">' + escapeHtml(k) + '</span>').join('') +
+        '</div>'
+      : '';
+
+    const authorsHtml = art.authors
+      ? '<div class="art-authors">' + escapeHtml(art.authors) + '</div>'
+      : '';
+
+    const doiHtml = art.doi
+      ? '<div class="art-doi">' + escapeHtml(art.doi) + '</div>'
+      : '';
+
+    return (
+      '<div class="toc-article">' +
+        '<div class="art-num"><div class="art-num-box">' + numStr + '</div>' +
+        '<div class="art-num-line"></div></div>' +
+        '<div class="art-content">' +
+          '<span class="art-type-tag ' + typeClass + '">' + typeLabel + '</span>' +
+          '<div class="art-title">' + escapeHtml(art.title) + '</div>' +
+          authorsHtml + kwHtml +
+        '</div>' +
+        '<div class="art-meta">' +
+          '<div class="art-pages-label">' + pagesLabel + '</div>' +
+          '<div class="art-pages">' + escapeHtml(pagesValue) + '</div>' +
+          doiHtml +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  /* Render articles into the TOC contents area */
+  function renderTocArticles(articles) {
+    const container = document.getElementById('toc-contents-area');
+    if (!container) return;
+
+    // Separate research from review articles
+    const research = articles.filter(a => a.type !== 'review');
+    const review   = articles.filter(a => a.type === 'review');
+    let html = '';
+
+    if (research.length) {
+      html += '<div class="toc-section-label">Research Articles</div>';
+      html += '<div class="toc-articles">';
+      research.forEach((art, i) => { html += buildArticleHtml(art, i + 1); });
+      html += '</div>';
+    }
+
+    if (review.length) {
+      html += '<div class="toc-section-label">Review Articles</div>';
+      html += '<div class="toc-articles">';
+      review.forEach((art, i) => { html += buildArticleHtml(art, research.length + i + 1); });
+      html += '</div>';
+    }
+
+    if (!html) {
+      html = '<div style="padding:18px 36px;color:#aaa;font-size:12px;">No articles found.</div>';
+    }
+
+    container.innerHTML = html;
+  }
+
+  /* Parse articles from the fetched XML document */
+  function parseArticles(xmlDoc) {
+    const articles = [];
+    const articleEls = xmlDoc.querySelectorAll('article');
+
+    articleEls.forEach(art => {
+      // Title — try several tag-name variants
+      const title = getTextContent(art, ['article_title', 'title', 'article-title']) || '';
+
+      // Authors — collect individual <author> or <contrib> elements
+      let authorNames = [];
+      const authorEls = art.querySelectorAll('author');
+      if (authorEls.length) {
+        authorEls.forEach(a => {
+          const fname = getTextContent(a, ['fname', 'first-name', 'given-names']);
+          const lname = getTextContent(a, ['lname', 'last-name', 'surname']);
+          const full  = getTextContent(a, ['name', 'full-name', 'display-name']);
+          if (fname || lname) {
+            authorNames.push((fname + ' ' + lname).trim());
+          } else if (full) {
+            authorNames.push(full.trim());
+          } else {
+            const text = a.textContent.trim();
+            if (text) authorNames.push(text);
+          }
+        });
+      }
+      const authors = authorNames.join(', ');
+
+      // Pages
+      const fpage = getTextContent(art, ['fpage']);
+      const lpage = getTextContent(art, ['lpage']);
+
+      // DOI — several possible element names / attribute values
+      let doi = getTextContent(art, ['doi', 'DOI']);
+      if (!doi) {
+        // JATS-style: <article-id pub-id-type="doi">
+        const idEls = art.querySelectorAll('article-id');
+        idEls.forEach(el => {
+          if (!doi && el.getAttribute('pub-id-type') === 'doi') {
+            doi = el.textContent.trim();
+          }
+        });
+      }
+
+      // Article ID: last numeric segment of DOI
+      let articleId = '';
+      if (doi) {
+        const m = doi.match(/(\d+)\s*$/);
+        if (m) articleId = m[1];
+      }
+
+      // Article type
+      const typeRaw = getTextContent(art, ['article_type', 'article-type', 'type']);
+      const type = normalizeArticleType(typeRaw);
+
+      // Keywords
+      const kwEls = art.querySelectorAll('keyword');
+      const keywords = Array.from(kwEls).map(k => k.textContent.trim()).filter(k => k);
+
+      if (title) {
+        articles.push({ title, authors, fpage, lpage, doi, articleId, type, keywords });
+      }
+    });
+
+    return articles;
+  }
+
+  /* Main function: fetch XML and populate TOC */
+  async function loadContentsFromXml() {
+    const MAX_PARSE_ERR_LEN = 120;
+    const urlEl   = document.getElementById('ctrl-xml-url');
+    const btn     = document.getElementById('ctrl-xml-btn');
+    const urlInput = urlEl ? urlEl.value.trim() : '';
+
+    if (!urlInput) {
+      showXmlStatus('الرجاء إدخال رابط XML الخاص بالعدد.  (Please enter the issue XML URL.)', 'error');
+      return;
+    }
+
+    if (btn) btn.disabled = true;
+    showXmlStatus('⏳ جاري التحميل… (Loading…)', 'loading');
+
+    try {
+      // Public CORS proxy — required for cross-origin requests from a local file.
+      // Note: the XML URL is forwarded through allorigins.win; avoid using this
+      // for confidential content.
+      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(urlInput);
+      const response = await fetch(proxyUrl, { cache: 'no-store' });
+
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status + ' – ' + response.statusText);
+      }
+
+      const xmlText = await response.text();
+      if (!xmlText || !xmlText.trim()) {
+        throw new Error('The server returned an empty response.');
+      }
+
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
+
+      // Check for parse errors
+      const parseErr = xmlDoc.querySelector('parsererror');
+      if (parseErr) {
+        throw new Error('XML parse error: ' + parseErr.textContent.slice(0, MAX_PARSE_ERR_LEN));
+      }
+
+      const articles = parseArticles(xmlDoc);
+      if (!articles.length) {
+        throw new Error(
+          'No <article> elements found in the XML. ' +
+          'Please verify the URL returns valid issue XML.'
+        );
+      }
+
+      renderTocArticles(articles);
+      showXmlStatus('✓ تم تحميل ' + articles.length + ' بحث/بحوث بنجاح.  (' + articles.length + ' article(s) loaded.)', 'success');
+    } catch (err) {
+      showXmlStatus('✗ خطأ: ' + err.message, 'error');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
 </script>
 
 </body>
