@@ -2015,24 +2015,27 @@
 
     if (isDublinCore) {
       // OAI-PMH Dublin Core: dc:title, dc:creator, dc:identifier, dc:description
+      // dc:* elements live in a specific namespace; fall back to plain tag name for
+      // implementations that strip namespaces.
       const DC = 'http://purl.org/dc/elements/1.1/';
-      const getNS = (ns, tag) => {
-        const nodes = art.getElementsByTagNameNS ? art.getElementsByTagNameNS(ns, tag)
-                                                  : art.getElementsByTagName(tag);
-        for (let i = 0; i < nodes.length; i++) {
-          const t = nodes[i].textContent.trim();
-          if (t) return t;
-        }
-        return '';
-      };
-      title   = getNS(DC, 'title') || getTextContent(art, ['title']);
+      const getDC = tag => getTextContent(art, [tag]) ||
+        (() => {
+          const nodes = art.getElementsByTagNameNS ? art.getElementsByTagNameNS(DC, tag)
+                                                   : art.getElementsByTagName(tag);
+          for (let i = 0; i < nodes.length; i++) {
+            const t = nodes[i].textContent.trim();
+            if (t) return t;
+          }
+          return '';
+        })();
+      title   = getDC('title');
       const creatorEls = art.getElementsByTagNameNS ? art.getElementsByTagNameNS(DC, 'creator')
                                                     : art.getElementsByTagName('creator');
       authors = Array.from(creatorEls).map(e => e.textContent.trim()).filter(Boolean).join(', ');
-      const ident = getNS(DC, 'identifier') || '';
+      const ident = getDC('identifier');
       if (/^10\./.test(ident)) doi = ident;
       fpage = ''; lpage = '';
-      type = normalizeArticleType(getNS(DC, 'type') || '');
+      type = normalizeArticleType(getDC('type'));
       keywords = [];
     } else {
       // OJS native / JATS XML
@@ -2342,15 +2345,16 @@
     // Strip angle brackets from tag names derived from user-supplied XML.
     // showXmlStatus uses textContent so HTML injection is not possible, but
     // this prevents stray '<>' from appearing unexpectedly in the message.
-    const sanitizeTag = s => (s || '').replace(/[<>]/g, '');
-    const rootTag = sanitizeTag(articles._rootTagName || '(unknown)');
+    const stripAngleBrackets = s => (s || '').replace(/[<>]/g, '');
+    const rootTag = stripAngleBrackets(articles._rootTagName || '(unknown)');
     // Collect up to 5 distinct direct child tag names of the root to aid diagnosis.
     let childTags = '';
     if (xmlDoc && xmlDoc.documentElement) {
       const seen = new Set();
       const children = xmlDoc.documentElement.childNodes;
+      const ELEMENT_NODE = 1; // Node.ELEMENT_NODE — safe to use as a literal in all browsers
       for (let i = 0; i < children.length && seen.size < 5; i++) {
-        if (children[i].nodeType === 1 /* ELEMENT_NODE */) seen.add(sanitizeTag(children[i].nodeName));
+        if (children[i].nodeType === ELEMENT_NODE) seen.add(stripAngleBrackets(children[i].nodeName));
       }
       if (seen.size) childTags = ' (عناصر فرعية: ' + [...seen].join(', ') + ')';
     }
