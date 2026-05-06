@@ -2216,7 +2216,7 @@
         ...getElsByTag(art, 'keywords').flatMap(k => splitXmlListText(k.textContent)),
         ...splitXmlListText(getTextContent(art, ['keywordlist', 'keyword_list']))
       ].filter(Boolean);
-      // Array.from(new Set(...)) preserves first-seen keyword order while removing duplicates.
+      // Array.from(new Set(...)) removes duplicates while keeping unique keywords in insertion order.
       keywords = Array.from(new Set(keywords));
     }
 
