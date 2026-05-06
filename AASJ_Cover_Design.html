@@ -1135,6 +1135,18 @@
       style="flex:1; max-width:620px;">
     <button id="ctrl-xml-btn" class="ctrl-btn" onclick="loadContentsFromXml()">Load Contents</button>
   </div>
+  <div style="display:flex;align-items:center;gap:10px;margin:4px 0;">
+    <div style="flex:1;height:1px;background:rgba(201,148,26,0.25);"></div>
+    <span style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.35);text-transform:uppercase;">أو / OR</span>
+    <div style="flex:1;height:1px;background:rgba(201,148,26,0.25);"></div>
+  </div>
+  <div class="ctrl-row" style="align-items:flex-start;">
+    <span class="ctrl-label" style="padding-top:6px;">Paste XML</span>
+    <textarea id="ctrl-xml-paste" class="ctrl-textarea"
+      placeholder="الصق محتوى ملف XML هنا مباشرةً…  (Paste the raw XML content here…)"
+      rows="5" style="flex:1;max-width:620px;font-family:monospace;font-size:11px;color:#E8B84B;"></textarea>
+    <button id="ctrl-xml-paste-btn" class="ctrl-btn" onclick="loadContentsFromPastedXml()" style="align-self:flex-start;margin-top:2px;">Load Pasted XML</button>
+  </div>
   <div id="xml-status" class="xml-status"></div>
 </div>
 
@@ -2160,6 +2172,45 @@
         throw new Error(
           'No <article> elements found in the XML. ' +
           'Please verify the URL returns valid issue XML.'
+        );
+      }
+
+      renderTocArticles(articles);
+      showXmlStatus('✓ تم تحميل ' + articles.length + ' بحث/بحوث بنجاح.  (' + articles.length + ' article(s) loaded.)', 'success');
+    } catch (err) {
+      showXmlStatus('✗ خطأ: ' + err.message, 'error');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  /* Load TOC from XML text pasted directly by the user */
+  function loadContentsFromPastedXml() {
+    const MAX_PARSE_ERR_LEN = 120;
+    const pasteEl = document.getElementById('ctrl-xml-paste');
+    const btn     = document.getElementById('ctrl-xml-paste-btn');
+    const xmlText = pasteEl ? pasteEl.value.trim() : '';
+
+    if (!xmlText) {
+      showXmlStatus('الرجاء لصق محتوى XML أولاً.  (Please paste the XML content first.)', 'error');
+      return;
+    }
+
+    if (btn) btn.disabled = true;
+    try {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
+
+      const parseErr = xmlDoc.querySelector('parsererror');
+      if (parseErr) {
+        throw new Error('XML parse error: ' + parseErr.textContent.slice(0, MAX_PARSE_ERR_LEN));
+      }
+
+      const articles = parseArticles(xmlDoc);
+      if (!articles.length) {
+        throw new Error(
+          'No <article> elements found in the XML. ' +
+          'Please verify you pasted valid issue XML.'
         );
       }
 
