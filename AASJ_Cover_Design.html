@@ -2014,9 +2014,8 @@
   }
 
   function decodeHtmlEntities(text) {
-    const textarea = document.createElement('textarea');
-    textarea.innerHTML = text || '';
-    return textarea.value;
+    const htmlDoc = new DOMParser().parseFromString(text || '', 'text/html');
+    return htmlDoc.documentElement ? htmlDoc.documentElement.textContent || '' : '';
   }
 
   function normalizeXmlUrl(url) {
@@ -2026,11 +2025,11 @@
   }
 
   function looksLikeXmlText(text) {
-    return /<\?xml\b|<\/?[A-Za-z_][\w:.-]*/i.test(text || '');
+    return /<\?xml\b|<\/?[A-Za-z_][\w:.-]{0,120}/i.test(text || '');
   }
 
   function looksLikeEscapedXmlText(text) {
-    return /&lt;\?xml\b|&lt;\/?[A-Za-z_][\w:.-]*/i.test(text || '');
+    return /&lt;\?xml\b|&lt;\/?[A-Za-z_][\w:.-]{0,120}/i.test(text || '');
   }
 
   function getXmlParseError(xmlDoc) {
