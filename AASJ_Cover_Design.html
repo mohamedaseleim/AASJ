@@ -2013,9 +2013,9 @@
     return (text || '').replace(/^\uFEFF/, '').trim();
   }
 
-  const MAX_XML_TAG_NAME_LENGTH = 120;
-  const XML_TEXT_PATTERN = new RegExp(`<\\?xml\\b|<\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_NAME_LENGTH}}`, 'i');
-  const ESCAPED_XML_TEXT_PATTERN = new RegExp(`&lt;\\?xml\\b|&lt;\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_NAME_LENGTH}}`, 'i');
+  const MAX_XML_TAG_NAME_EXTRA_CHARS = 120;
+  const XML_TEXT_PATTERN = new RegExp(`<\\?xml\\b|<\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_NAME_EXTRA_CHARS}}`, 'i');
+  const ESCAPED_XML_TEXT_PATTERN = new RegExp(`&lt;\\?xml\\b|&lt;\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_NAME_EXTRA_CHARS}}`, 'i');
 
   function decodeHtmlEntities(text) {
     const htmlDoc = new DOMParser().parseFromString(text || '', 'text/html');
@@ -2044,7 +2044,7 @@
 
   function formatXmlParseErrorText(parseErr, maxParseErrLen) {
     const text = parseErr ? (parseErr.textContent || '').trim() : '';
-    if (!text) return 'Unknown XML parser error.';
+    if (!text) return parseErr ? 'XML parser error with no details available.' : 'Unknown XML parser error.';
     return text.length > maxParseErrLen
       ? text.slice(0, maxParseErrLen) + '...'
       : text;
@@ -2276,7 +2276,8 @@
     if (lastParseError) throw lastParseError;
     throw new Error(
       'XML parse error: unable to detect valid XML content after trying ' +
-      candidates.length + ' candidate(s) from ' + (htmlLike ? 'HTML-wrapped' : 'raw') + ' input.'
+      candidates.length + ' candidate(s) from ' + (htmlLike ? 'HTML-wrapped' : 'raw') + ' input. ' +
+      'Ensure the pasted content contains complete XML markup with matching opening and closing tags.'
     );
   }
 
