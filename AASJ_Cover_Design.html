@@ -1903,7 +1903,7 @@
      semicolon/pipe-delimited strings used by some EKB feeds. */
   function splitXmlListText(text) {
     return (text || '')
-      .split(/(?:\s*[;\n|]\s*)+/)
+      .split(/[;\n|]+/)
       .map(part => part.trim())
       .filter(Boolean);
   }
@@ -2188,6 +2188,7 @@
           .map(a => a.textContent.trim())
           .filter(Boolean);
       }
+      authorNames = authorNames.filter(Boolean);
       authors = authorNames.join(', ') || getTextContent(art, ['authors', 'authornames', 'author_names']);
 
       // Pages: prefer fpage/lpage; fall back to OJS <pages>
