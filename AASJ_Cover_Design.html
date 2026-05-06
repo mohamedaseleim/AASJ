@@ -2051,7 +2051,10 @@
      Each proxy entry is { label, getUrl(encodedTarget), extractText(response) } */
   async function fetchViaProxy(proxy, encodedTarget, timeoutMs) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const timer = setTimeout(
+      () => controller.abort(new Error('Proxy timed out after ' + (timeoutMs / 1000) + 's')),
+      timeoutMs
+    );
     try {
       const response = await fetch(proxy.getUrl(encodedTarget), {
         cache: 'no-store',
@@ -2069,7 +2072,7 @@
   /* Main function: fetch XML and populate TOC */
   async function loadContentsFromXml() {
     const MAX_PARSE_ERR_LEN = 120;
-    const PROXY_TIMEOUT_MS  = 15000;
+    const PROXY_TIMEOUT_MS  = 20000;
 
     // Public CORS proxies tried in order — required for cross-origin requests from
     // a local file. Note: the XML URL is forwarded; avoid using for confidential content.
@@ -2082,6 +2085,16 @@
       {
         label: 'corsproxy.io',
         getUrl: enc => 'https://corsproxy.io/?' + enc,
+        extractText: r => r.text()
+      },
+      {
+        label: 'codetabs',
+        getUrl: enc => 'https://api.codetabs.com/v1/proxy?quest=' + enc,
+        extractText: r => r.text()
+      },
+      {
+        label: 'htmldriven cors-proxy',
+        getUrl: enc => 'https://cors-proxy.htmldriven.com/?url=' + enc,
         extractText: r => r.text()
       },
       {
