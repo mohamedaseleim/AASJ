@@ -1906,6 +1906,28 @@
       .filter(Boolean);
   }
 
+  const xmlTagLookupCache = new WeakMap();
+
+  function getDescendantTagIndex(parent) {
+    if (!parent || !parent.getElementsByTagName) return new Map();
+    const cached = xmlTagLookupCache.get(parent);
+    if (cached) return cached;
+
+    const index = new Map();
+    const descendants = parent.getElementsByTagName('*');
+    for (let i = 0; i < descendants.length; i++) {
+      const node = descendants[i];
+      const name = getNormalizedXmlName(node);
+      if (!name) continue;
+      const bucket = index.get(name);
+      if (bucket) bucket.push(node);
+      else index.set(name, [node]);
+    }
+
+    xmlTagLookupCache.set(parent, index);
+    return index;
+  }
+
   /* Safely get trimmed text content of first matching child element.
      Iterates ALL descendant elements matching each tag name case-insensitively
      and returns the first non-empty text, so namespace-prefixed, PascalCase,
@@ -2019,13 +2041,12 @@
   }
 
   /* Helper: collect all descendant elements matching a tag name in any namespace,
-     ignoring case and namespace prefixes. This does a linear scan of descendants
-     so mixed-case EKB/OJS/JATS tags are matched consistently. */
+     ignoring case and namespace prefixes. Descendants are indexed once per parent
+     so repeated EKB/OJS/JATS lookups avoid rescanning the full subtree. */
   function getElsByTag(parent, tagName) {
     const wanted = String(tagName || '').toLowerCase();
     if (!wanted || !parent || !parent.getElementsByTagName) return [];
-    return Array.from(parent.getElementsByTagName('*'))
-      .filter(node => getNormalizedXmlName(node) === wanted);
+    return getDescendantTagIndex(parent).get(wanted) || [];
   }
 
   function sanitizeXmlText(text) {
