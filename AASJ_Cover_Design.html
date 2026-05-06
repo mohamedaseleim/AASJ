@@ -13,7 +13,7 @@
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 48px 24px;
+    padding: 0 24px 48px;
     font-family: 'Source Sans 3', sans-serif;
     gap: 48px;
     flex-wrap: wrap;
@@ -300,6 +300,7 @@
     white-space: nowrap;
   }
   .toc-vol-badge span { display: block; font-size: 9px; color: rgba(255,255,255,0.45); font-weight: 400; margin-top: 2px; letter-spacing: 0.5px; }
+  .toc-vol-badge #toc-vol-main { display: block; font-size: 10px; color: #C9941A; font-weight: 700; letter-spacing: 1.5px; margin-top: 0; }
 
   .toc-gold-div {
     height: 3px;
@@ -612,9 +613,137 @@
   .spine-line.r { right: 3px; }
 
   .covers-row { display: flex; align-items: flex-start; }
+
+  /* ═══════════════════════════════════════════════════
+     COVER CONTROLS PANEL
+  ═══════════════════════════════════════════════════ */
+  .cover-controls {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 20px 24px;
+    background: #1f2937;
+    border-bottom: 2px solid #C9941A;
+    margin-bottom: 32px;
+  }
+  .cover-controls label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.65);
+  }
+  .cover-controls select {
+    background: #0D3B1F;
+    color: #E8B84B;
+    border: 1px solid rgba(201,148,26,0.5);
+    border-radius: 3px;
+    padding: 5px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    outline: none;
+    min-width: 90px;
+  }
+  .cover-controls select:focus {
+    border-color: #C9941A;
+    box-shadow: 0 0 0 2px rgba(201,148,26,0.25);
+  }
+  .controls-title {
+    width: 100%;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #C9941A;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
 </style>
 </head>
 <body>
+
+<!-- ════════════════════════════════════════════
+     COVER CONTROLS — Edit Volume / Issue / Month / Year
+════════════════════════════════════════════ -->
+<div class="cover-controls">
+  <div class="controls-title">◆ Cover Settings</div>
+
+  <label>Volume
+    <select id="ctrl-vol" onchange="updateCover()">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8" selected>8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
+      <option value="11">11</option>
+      <option value="12">12</option>
+      <option value="13">13</option>
+      <option value="14">14</option>
+      <option value="15">15</option>
+      <option value="16">16</option>
+      <option value="17">17</option>
+      <option value="18">18</option>
+      <option value="19">19</option>
+      <option value="20">20</option>
+    </select>
+  </label>
+
+  <label>Issue
+    <select id="ctrl-issue" onchange="updateCover()">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3" selected>3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+    </select>
+  </label>
+
+  <label>Month
+    <select id="ctrl-month" onchange="updateCover()">
+      <option value="January">January</option>
+      <option value="February">February</option>
+      <option value="March">March</option>
+      <option value="April">April</option>
+      <option value="May">May</option>
+      <option value="June">June</option>
+      <option value="July">July</option>
+      <option value="August">August</option>
+      <option value="September" selected>September</option>
+      <option value="October">October</option>
+      <option value="November">November</option>
+      <option value="December">December</option>
+    </select>
+  </label>
+
+  <label>Year
+    <select id="ctrl-year" onchange="updateCover()">
+      <option value="2020">2020</option>
+      <option value="2021">2021</option>
+      <option value="2022">2022</option>
+      <option value="2023">2023</option>
+      <option value="2024">2024</option>
+      <option value="2025" selected>2025</option>
+      <option value="2026">2026</option>
+      <option value="2027">2027</option>
+      <option value="2028">2028</option>
+      <option value="2029">2029</option>
+      <option value="2030">2030</option>
+    </select>
+  </label>
+</div>
 
 <!-- ════════════════════════════════════════════
      BLOCK 1 : FRONT COVER + SPINE
@@ -676,8 +805,8 @@
 
       <!-- VOLUME RIBBON -->
       <div class="vol-ribbon">
-        <div class="vol-text">Volume 8 &nbsp;·&nbsp; Issue 3</div>
-        <div class="vol-date">September 2025</div>
+        <div class="vol-text" id="cover-vol-text">Volume 8 &nbsp;·&nbsp; Issue 3</div>
+        <div class="vol-date" id="cover-vol-date">September 2025</div>
       </div>
 
       <!-- IMAGE AREA — fills all remaining space -->
@@ -852,7 +981,7 @@
             </svg>
           </div>
           <div class="img-caption">
-            Cereal crop morphology, molecular markers, and agricultural biotechnology · AASJ Vol.8 No.3 · 2025
+            Cereal crop morphology, molecular markers, and agricultural biotechnology · <span id="caption-vol-info">AASJ Vol.8 No.3 · 2025</span>
           </div>
         </div>
       </div><!-- /image-area -->
@@ -875,7 +1004,7 @@
     <div class="spine">
       <div class="spine-line l"></div>
       <div class="spine-line r"></div>
-      <div class="spine-text">AASJ &nbsp;·&nbsp; VOL. 8 &nbsp;·&nbsp; NO. 3 &nbsp;·&nbsp; 2025 &nbsp;·&nbsp; Archives of Agriculture Sciences Journal</div>
+      <div class="spine-text" id="spine-text">AASJ &nbsp;·&nbsp; VOL. 8 &nbsp;·&nbsp; NO. 3 &nbsp;·&nbsp; 2025 &nbsp;·&nbsp; Archives of Agriculture Sciences Journal</div>
     </div>
 
   </div><!-- /covers-row -->
@@ -911,9 +1040,9 @@
           <div class="toc-journal-sub">Faculty of Agriculture · Al-Azhar University · Assiut, Egypt</div>
         </div>
       </div>
-      <div class="toc-vol-badge">
-        Vol. 8 · No. 3
-        <span>September 2025</span>
+      <div class="toc-vol-badge" id="toc-vol-badge">
+        <span id="toc-vol-main">Vol. 8 · No. 3</span>
+        <span id="toc-vol-date">September 2025</span>
       </div>
     </div>
 
@@ -1208,6 +1337,36 @@
 
   </div><!-- /cover-back -->
 </div>
+
+<script>
+  function updateCover() {
+    var vol   = document.getElementById('ctrl-vol').value;
+    var issue = document.getElementById('ctrl-issue').value;
+    var month = document.getElementById('ctrl-month').value;
+    var year  = document.getElementById('ctrl-year').value;
+
+    // Front cover — volume ribbon
+    document.getElementById('cover-vol-text').innerHTML =
+      'Volume ' + vol + ' &nbsp;&middot;&nbsp; Issue ' + issue;
+    document.getElementById('cover-vol-date').textContent = month + ' ' + year;
+
+    // Front cover — image caption
+    document.getElementById('caption-vol-info').textContent =
+      'AASJ Vol.' + vol + ' No.' + issue + ' \u00B7 ' + year;
+
+    // Spine
+    document.getElementById('spine-text').innerHTML =
+      'AASJ &nbsp;&middot;&nbsp; VOL. ' + vol +
+      ' &nbsp;&middot;&nbsp; NO. ' + issue +
+      ' &nbsp;&middot;&nbsp; ' + year +
+      ' &nbsp;&middot;&nbsp; Archives of Agriculture Sciences Journal';
+
+    // TOC page — volume badge
+    document.getElementById('toc-vol-main').textContent =
+      'Vol. ' + vol + ' \u00B7 No. ' + issue;
+    document.getElementById('toc-vol-date').textContent = month + ' ' + year;
+  }
+</script>
 
 </body>
 </html>
