@@ -1127,7 +1127,7 @@
             </svg>
           </div>
           <div class="img-caption">
-            <span id="caption-vol-info">AASJ Vol.9 No.1 · 2026</span>
+            <span id="caption-vol-info"></span>
           </div>
         </div>
       </div><!-- /image-area -->
@@ -1543,8 +1543,7 @@
     document.getElementById('cover-vol-date').textContent = `${month} ${year}`;
 
     // Front cover — image caption
-    document.getElementById('caption-vol-info').textContent =
-      `AASJ Vol.${vol} No.${issue} \u00b7 ${year}`;
+    document.getElementById('caption-vol-info').textContent = '';
 
     // Spine
     document.getElementById('spine-text').textContent =
