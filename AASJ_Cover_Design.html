@@ -1890,15 +1890,18 @@
      (e.g. xmlns="http://pkp.sfu.ca" as used by OJS / EKB journals) are found. */
   function getTextContent(el, tagNames) {
     for (const tag of tagNames) {
-      // getElementsByTagNameNS('*', tag) matches any namespace (robust for OJS/EKB XML).
-      // Fall back to getElementsByTagName for environments that don't support NS variant.
-      const nodes = el.getElementsByTagNameNS
-        ? el.getElementsByTagNameNS('*', tag)
-        : el.getElementsByTagName(tag);
-      // Return the first element that has non-empty text content.
-      for (let i = 0; i < nodes.length; i++) {
-        const text = nodes[i].textContent.trim();
-        if (text) return text;
+      const cap = tag.charAt(0).toUpperCase() + tag.slice(1);
+      // Try exact tag name, then first-letter-capitalised (EKB exports PascalCase tags).
+      const candidates = cap === tag ? [tag] : [tag, cap];
+      for (const t of candidates) {
+        const nodes = el.getElementsByTagNameNS
+          ? el.getElementsByTagNameNS('*', t)
+          : el.getElementsByTagName(t);
+        // Return the first element that has non-empty text content.
+        for (let i = 0; i < nodes.length; i++) {
+          const text = nodes[i].textContent.trim();
+          if (text) return text;
+        }
       }
     }
     return '';
@@ -2001,12 +2004,18 @@
     container.innerHTML = html;
   }
 
-  /* Helper: collect all elements matching a tag name in any namespace */
+  /* Helper: collect all elements matching a tag name in any namespace.
+     Also tries the first-letter-capitalised variant so that EKB XML tags
+     such as <Article>, <Author>, <Title> are found alongside lowercase ones. */
   function getElsByTag(parent, tagName) {
-    if (parent.getElementsByTagNameNS) {
-      return Array.from(parent.getElementsByTagNameNS('*', tagName));
-    }
-    return Array.from(parent.getElementsByTagName(tagName));
+    const tryFn = parent.getElementsByTagNameNS
+      ? t => Array.from(parent.getElementsByTagNameNS('*', t))
+      : t => Array.from(parent.getElementsByTagName(t));
+    const result = tryFn(tagName);
+    if (result.length) return result;
+    // EKB exports PascalCase tags; try capitalised variant as fallback.
+    const cap = tagName.charAt(0).toUpperCase() + tagName.slice(1);
+    return cap !== tagName ? tryFn(cap) : result;
   }
 
   function sanitizeXmlText(text) {
