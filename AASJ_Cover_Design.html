@@ -2014,6 +2014,8 @@
   }
 
   const MAX_XML_TAG_NAME_LENGTH = 120;
+  const XML_TEXT_PATTERN = new RegExp('<\\?xml\\b|<\\/?[A-Za-z_][\\w:.-]{0,' + MAX_XML_TAG_NAME_LENGTH + '}', 'i');
+  const ESCAPED_XML_TEXT_PATTERN = new RegExp('&lt;\\?xml\\b|&lt;\\/?[A-Za-z_][\\w:.-]{0,' + MAX_XML_TAG_NAME_LENGTH + '}', 'i');
 
   function decodeHtmlEntities(text) {
     const htmlDoc = new DOMParser().parseFromString(text || '', 'text/html');
@@ -2027,11 +2029,11 @@
   }
 
   function looksLikeXmlText(text) {
-    return new RegExp('<\\?xml\\b|<\\/?[A-Za-z_][\\w:.-]{0,' + MAX_XML_TAG_NAME_LENGTH + '}', 'i').test(text || '');
+    return XML_TEXT_PATTERN.test(text || '');
   }
 
   function looksLikeEscapedXmlText(text) {
-    return new RegExp('&lt;\\?xml\\b|&lt;\\/?[A-Za-z_][\\w:.-]{0,' + MAX_XML_TAG_NAME_LENGTH + '}', 'i').test(text || '');
+    return ESCAPED_XML_TEXT_PATTERN.test(text || '');
   }
 
   function getXmlParseError(xmlDoc) {
