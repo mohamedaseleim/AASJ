@@ -1882,14 +1882,13 @@
     el.style.display = 'block';
   }
 
-  /* Safely get trimmed text content of first matching child element */
+  /* Safely get trimmed text content of first matching child element.
+     Uses getElementsByTagName so it works correctly with namespaced XML
+     (e.g. xmlns="http://pkp.sfu.ca" as used by OJS / EKB journals). */
   function getTextContent(el, tagNames) {
     for (const tag of tagNames) {
-      // Try direct querySelector (works for simple names)
-      try {
-        const found = el.querySelector(tag);
-        if (found) return found.textContent.trim();
-      } catch (e) { /* ignore invalid CSS selector names from XML */ }
+      const found = el.getElementsByTagName(tag)[0];
+      if (found) return found.textContent.trim();
     }
     return '';
   }
@@ -1991,22 +1990,25 @@
     container.innerHTML = html;
   }
 
-  /* Parse articles from the fetched XML document */
+  /* Parse articles from the fetched XML document.
+     Handles OJS / EKB journal XML with or without XML namespaces. */
   function parseArticles(xmlDoc) {
     const articles = [];
-    const articleEls = xmlDoc.querySelectorAll('article');
+    // getElementsByTagName matches regardless of namespace (OJS uses xmlns="http://pkp.sfu.ca")
+    const articleEls = xmlDoc.getElementsByTagName('article');
 
-    articleEls.forEach(art => {
-      // Title — try several tag-name variants
-      const title = getTextContent(art, ['article_title', 'title', 'article-title']) || '';
+    Array.from(articleEls).forEach(art => {
+      // Title — try several tag-name variants including OJS locale-attributed <title>
+      const title = getTextContent(art, ['article_title', 'article-title', 'title']) || '';
 
       // Authors — collect individual <author> or <contrib> elements
       let authorNames = [];
-      const authorEls = art.querySelectorAll('author');
+      const authorEls = art.getElementsByTagName('author');
       if (authorEls.length) {
-        authorEls.forEach(a => {
-          const fname = getTextContent(a, ['fname', 'first-name', 'given-names']);
-          const lname = getTextContent(a, ['lname', 'last-name', 'surname']);
+        Array.from(authorEls).forEach(a => {
+          // OJS 3.x uses givenname/familyname; OJS 2.x uses firstname/lastname or fname/lname
+          const fname = getTextContent(a, ['fname', 'firstname', 'given-names', 'givenname']);
+          const lname = getTextContent(a, ['lname', 'lastname', 'surname', 'familyname']);
           const full  = getTextContent(a, ['name', 'full-name', 'display-name']);
           if (fname || lname) {
             authorNames.push((fname + ' ' + lname).trim());
@@ -2020,17 +2022,34 @@
       }
       const authors = authorNames.join(', ');
 
-      // Pages
-      const fpage = getTextContent(art, ['fpage']);
-      const lpage = getTextContent(art, ['lpage']);
+      // Pages: prefer fpage/lpage; fall back to OJS <pages> element (e.g. "1-20")
+      let fpage = getTextContent(art, ['fpage']);
+      let lpage = getTextContent(art, ['lpage']);
+      if (!fpage && !lpage) {
+        const pages = getTextContent(art, ['pages']);
+        if (pages) {
+          const m = pages.match(/^(\d+)\s*[-–]\s*(\d+)$/);
+          if (m) { fpage = m[1]; lpage = m[2]; }
+          else    { fpage = pages; }
+        }
+      }
 
       // DOI — several possible element names / attribute values
       let doi = getTextContent(art, ['doi', 'DOI']);
       if (!doi) {
         // JATS-style: <article-id pub-id-type="doi">
-        const idEls = art.querySelectorAll('article-id');
-        idEls.forEach(el => {
+        // OJS style:  <id type="doi">
+        const idEls = art.getElementsByTagName('article-id');
+        Array.from(idEls).forEach(el => {
           if (!doi && el.getAttribute('pub-id-type') === 'doi') {
+            doi = el.textContent.trim();
+          }
+        });
+      }
+      if (!doi) {
+        const idEls = art.getElementsByTagName('id');
+        Array.from(idEls).forEach(el => {
+          if (!doi && el.getAttribute('type') === 'doi') {
             doi = el.textContent.trim();
           }
         });
@@ -2048,7 +2067,7 @@
       const type = normalizeArticleType(typeRaw);
 
       // Keywords
-      const kwEls = art.querySelectorAll('keyword');
+      const kwEls = art.getElementsByTagName('keyword');
       const keywords = Array.from(kwEls).map(k => k.textContent.trim()).filter(k => k);
 
       if (title) {
@@ -2084,11 +2103,22 @@
   /* Main function: fetch XML and populate TOC */
   async function loadContentsFromXml() {
     const MAX_PARSE_ERR_LEN = 120;
-    const PROXY_TIMEOUT_MS  = 20000;
+    const PROXY_TIMEOUT_MS  = 25000;
 
     // Public CORS proxies tried in order — required for cross-origin requests from
     // a local file. Note: the XML URL is forwarded; avoid using for confidential content.
     const PROXIES = [
+      {
+        // Attempt a direct fetch first — succeeds when the server sends CORS headers.
+        // Only permit http/https URLs to prevent unexpected protocol handlers.
+        label: 'direct fetch',
+        getUrl: enc => {
+          const url = decodeURIComponent(enc);
+          if (!/^https?:\/\//i.test(url)) throw new Error('Only http/https URLs are supported.');
+          return url;
+        },
+        extractText: r => r.text()
+      },
       {
         label: 'allorigins (raw)',
         getUrl: enc => 'https://api.allorigins.win/raw?url=' + enc,
@@ -2102,6 +2132,11 @@
       {
         label: 'codetabs',
         getUrl: enc => 'https://api.codetabs.com/v1/proxy?quest=' + enc,
+        extractText: r => r.text()
+      },
+      {
+        label: 'thingproxy',
+        getUrl: enc => 'https://thingproxy.freeboard.io/fetch/' + enc,
         extractText: r => r.text()
       },
       {
@@ -2161,8 +2196,10 @@
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
 
-      // Check for parse errors
-      const parseErr = xmlDoc.querySelector('parsererror');
+      // Check for parse errors (parsererror is in no namespace in all browsers)
+      const parseErr = xmlDoc.querySelector('parsererror') ||
+                       (xmlDoc.documentElement && xmlDoc.documentElement.nodeName === 'parsererror'
+                         ? xmlDoc.documentElement : null);
       if (parseErr) {
         throw new Error('XML parse error: ' + parseErr.textContent.slice(0, MAX_PARSE_ERR_LEN));
       }
@@ -2170,8 +2207,9 @@
       const articles = parseArticles(xmlDoc);
       if (!articles.length) {
         throw new Error(
-          'No <article> elements found in the XML. ' +
-          'Please verify the URL returns valid issue XML.'
+          'لم يتم العثور على عناصر <article> في XML. ' +
+          'يرجى التحقق من أن الرابط يعيد XML صحيح للعدد.  ' +
+          '(No <article> elements found. Please verify the URL returns valid issue XML.)'
         );
       }
 
@@ -2201,7 +2239,9 @@
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
 
-      const parseErr = xmlDoc.querySelector('parsererror');
+      const parseErr = xmlDoc.querySelector('parsererror') ||
+                       (xmlDoc.documentElement && xmlDoc.documentElement.nodeName === 'parsererror'
+                         ? xmlDoc.documentElement : null);
       if (parseErr) {
         throw new Error('XML parse error: ' + parseErr.textContent.slice(0, MAX_PARSE_ERR_LEN));
       }
@@ -2209,8 +2249,9 @@
       const articles = parseArticles(xmlDoc);
       if (!articles.length) {
         throw new Error(
-          'No <article> elements found in the XML. ' +
-          'Please verify you pasted valid issue XML.'
+          'لم يتم العثور على عناصر <article> في XML. ' +
+          'يرجى التحقق من أن المحتوى الملصق هو XML صحيح للعدد.  ' +
+          '(No <article> elements found. Please verify you pasted valid issue XML.)'
         );
       }
 
