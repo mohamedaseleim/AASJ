@@ -665,6 +665,106 @@
     text-transform: uppercase;
     margin-bottom: 4px;
   }
+  /* ── Back-cover content controls ── */
+  .back-content-controls {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px 24px;
+    background: #1f2937;
+    border-bottom: 2px solid #C9941A;
+    margin-bottom: 32px;
+    box-sizing: border-box;
+  }
+  .ctrl-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .ctrl-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.65);
+    min-width: 95px;
+    padding-top: 6px;
+  }
+  .ctrl-textarea {
+    background: #0D3B1F;
+    color: #E8B84B;
+    border: 1px solid rgba(201,148,26,0.5);
+    border-radius: 3px;
+    padding: 6px 10px;
+    font-size: 11.5px;
+    font-weight: 500;
+    outline: none;
+    resize: vertical;
+    flex: 1;
+    min-width: 260px;
+    max-width: 720px;
+    font-family: 'EB Garamond', serif;
+    line-height: 1.5;
+  }
+  .ctrl-textarea:focus {
+    border-color: #C9941A;
+    box-shadow: 0 0 0 2px rgba(201,148,26,0.25);
+  }
+  .ctrl-input {
+    background: #0D3B1F;
+    color: #E8B84B;
+    border: 1px solid rgba(201,148,26,0.5);
+    border-radius: 3px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    outline: none;
+    flex: 1;
+    min-width: 140px;
+  }
+  .ctrl-input:focus {
+    border-color: #C9941A;
+    box-shadow: 0 0 0 2px rgba(201,148,26,0.25);
+  }
+  .info-cards-edit-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 10px;
+    width: 100%;
+  }
+  .info-card-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(13,59,31,0.35);
+    border: 1px solid rgba(201,148,26,0.25);
+    border-radius: 4px;
+    padding: 10px 12px;
+  }
+  .info-card-edit-name {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #C9941A;
+    margin-bottom: 2px;
+  }
+  .info-card-edit-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .info-card-edit-row-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    width: 28px;
+    flex-shrink: 0;
+  }
 </style>
 </head>
 <body>
@@ -882,7 +982,107 @@
 </div>
 
 <!-- ════════════════════════════════════════════
-     BLOCK 1 : FRONT COVER + SPINE
+     BACK COVER CONTENT — Edit Aims & Scope / Journal Information
+════════════════════════════════════════════ -->
+<div class="back-content-controls">
+  <div class="controls-title">◆ Back Cover Content</div>
+
+  <!-- Aims & Scope text -->
+  <div class="ctrl-row">
+    <span class="ctrl-label">Aims &amp; Scope</span>
+    <textarea id="ctrl-aims-text" class="ctrl-textarea" rows="4"
+      oninput="updateBackContent()"></textarea>
+  </div>
+
+  <!-- Scope tags (comma-separated) -->
+  <div class="ctrl-row">
+    <span class="ctrl-label">Scope Tags</span>
+    <input id="ctrl-scope-tags" class="ctrl-input" type="text"
+      oninput="updateBackContent()"
+      style="max-width:720px;">
+    <span style="font-size:9px;color:rgba(255,255,255,0.35);padding-top:6px;">comma-separated</span>
+  </div>
+
+  <!-- Journal Information cards -->
+  <div class="ctrl-label" style="padding-top:4px;">Journal Information</div>
+  <div class="info-cards-edit-grid">
+
+    <div class="info-card-edit">
+      <div class="info-card-edit-name">Frequency</div>
+      <div class="info-card-edit-row">
+        <span class="info-card-edit-row-label">Value</span>
+        <input id="ctrl-val-frequency" class="ctrl-input" type="text" oninput="updateBackContent()">
+      </div>
+      <div class="info-card-edit-row">
+        <span class="info-card-edit-row-label">Sub</span>
+        <input id="ctrl-sub-frequency" class="ctrl-input" type="text" oninput="updateBackContent()">
+      </div>
+    </div>
+
+    <div class="info-card-edit">
+      <div class="info-card-edit-name">Access</div>
+      <div class="info-card-edit-row">
+        <span class="info-card-edit-row-label">Value</span>
+        <input id="ctrl-val-access" class="ctrl-input" type="text" oninput="updateBackContent()">
+      </div>
+      <div class="info-card-edit-row">
+        <span class="info-card-edit-row-label">Sub</span>
+        <input id="ctrl-sub-access" class="ctrl-input" type="text" oninput="updateBackContent()">
+      </div>
+    </div>
+
+    <div class="info-card-edit">
+      <div class="info-card-edit-name">Indexed In</div>
+      <div class="info-card-edit-row">
+        <span class="info-card-edit-row-label">Value</span>
+        <input id="ctrl-val-indexed" class="ctrl-input" type="text" oninput="updateBackContent()">
+      </div>
+      <div class="info-card-edit-row">
+        <span class="info-card-edit-row-label">Sub</span>
+        <input id="ctrl-sub-indexed" class="ctrl-input" type="text" oninput="updateBackContent()">
+      </div>
+    </div>
+
+    <div class="info-card-edit">
+      <div class="info-card-edit-name">Peer Review</div>
+      <div class="info-card-edit-row">
+        <span class="info-card-edit-row-label">Value</span>
+        <input id="ctrl-val-review" class="ctrl-input" type="text" oninput="updateBackContent()">
+      </div>
+      <div class="info-card-edit-row">
+        <span class="info-card-edit-row-label">Sub</span>
+        <input id="ctrl-sub-review" class="ctrl-input" type="text" oninput="updateBackContent()">
+      </div>
+    </div>
+
+    <div class="info-card-edit">
+      <div class="info-card-edit-name">Established</div>
+      <div class="info-card-edit-row">
+        <span class="info-card-edit-row-label">Value</span>
+        <input id="ctrl-val-established" class="ctrl-input" type="text" oninput="updateBackContent()">
+      </div>
+      <div class="info-card-edit-row">
+        <span class="info-card-edit-row-label">Sub</span>
+        <input id="ctrl-sub-established" class="ctrl-input" type="text" oninput="updateBackContent()">
+      </div>
+    </div>
+
+    <div class="info-card-edit">
+      <div class="info-card-edit-name">Language</div>
+      <div class="info-card-edit-row">
+        <span class="info-card-edit-row-label">Value</span>
+        <input id="ctrl-val-language" class="ctrl-input" type="text" oninput="updateBackContent()">
+      </div>
+      <div class="info-card-edit-row">
+        <span class="info-card-edit-row-label">Sub</span>
+        <input id="ctrl-sub-language" class="ctrl-input" type="text" oninput="updateBackContent()">
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
 ════════════════════════════════════════════ -->
 <div class="cover-wrapper">
   <div class="design-label">◆ Front Cover</div>
@@ -1432,10 +1632,10 @@
 
       <div>
         <div class="back-section-title">Aims &amp; Scope</div>
-        <div class="scope-text">
+        <div id="scope-text-content" class="scope-text">
           Archives of Agriculture Sciences Journal (AASJ) is a peer-reviewed, open-access journal dedicated to publishing original research, reviews, and scientific communications in all fields of agricultural and biological sciences. AASJ promotes scientific excellence and sustainable agricultural development across regional and global contexts.
         </div>
-        <div class="scope-tags">
+        <div id="scope-tags-container" class="scope-tags">
           <span class="tag">Crop Science</span>
           <span class="tag">Soil &amp; Water</span>
           <span class="tag">Plant Genetics</span>
@@ -1454,33 +1654,33 @@
         <div class="info-grid">
           <div class="info-card">
             <div class="info-card-label">Frequency</div>
-            <div class="info-card-value">Quarterly</div>
-            <div class="info-card-sub">4 issues per year</div>
+            <div id="info-val-frequency" class="info-card-value">Quarterly</div>
+            <div id="info-sub-frequency" class="info-card-sub">4 issues per year</div>
           </div>
           <div class="info-card">
             <div class="info-card-label">Access</div>
-            <div class="info-card-value">Open Access</div>
-            <div class="info-card-sub">Free to read &amp; download</div>
+            <div id="info-val-access" class="info-card-value">Open Access</div>
+            <div id="info-sub-access" class="info-card-sub">Free to read &amp; download</div>
           </div>
           <div class="info-card">
             <div class="info-card-label">Indexed In</div>
-            <div class="info-card-value">EKB · DOAJ</div>
-            <div class="info-card-sub">Scopus under evaluation</div>
+            <div id="info-val-indexed" class="info-card-value">EKB · DOAJ</div>
+            <div id="info-sub-indexed" class="info-card-sub">Scopus under evaluation</div>
           </div>
           <div class="info-card">
             <div class="info-card-label">Peer Review</div>
-            <div class="info-card-value">Double-Blind</div>
-            <div class="info-card-sub">International standards</div>
+            <div id="info-val-review" class="info-card-value">Double-Blind</div>
+            <div id="info-sub-review" class="info-card-sub">International standards</div>
           </div>
           <div class="info-card">
             <div class="info-card-label">Established</div>
-            <div class="info-card-value">Since 2018</div>
-            <div class="info-card-sub">Vol.1 No.1 · 2018</div>
+            <div id="info-val-established" class="info-card-value">Since 2018</div>
+            <div id="info-sub-established" class="info-card-sub">Vol.1 No.1 · 2018</div>
           </div>
           <div class="info-card">
             <div class="info-card-label">Language</div>
-            <div class="info-card-value">English</div>
-            <div class="info-card-sub">Arabic abstracts available</div>
+            <div id="info-val-language" class="info-card-value">English</div>
+            <div id="info-sub-language" class="info-card-sub">Arabic abstracts available</div>
           </div>
         </div>
       </div>
@@ -1549,6 +1749,55 @@
     document.getElementById('copyright-year-back').textContent =
       `\u00a9 ${copyYear} Faculty of Agriculture (Assiut Branch), Al-Azhar University`;
   }
+
+  function updateBackContent() {
+    // Aims & Scope text
+    const aimsText = document.getElementById('ctrl-aims-text').value;
+    document.getElementById('scope-text-content').textContent = aimsText;
+
+    // Scope tags (comma-separated → individual <span class="tag"> elements)
+    const tagsContainer = document.getElementById('scope-tags-container');
+    const tagsRaw = document.getElementById('ctrl-scope-tags').value;
+    const tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0);
+    tagsContainer.replaceChildren(...tags.map(tag => {
+      const span = document.createElement('span');
+      span.className = 'tag';
+      span.textContent = tag;
+      return span;
+    }));
+
+    // Journal Information cards
+    const fields = ['frequency', 'access', 'indexed', 'review', 'established', 'language'];
+    fields.forEach(key => {
+      const valEl = document.getElementById('info-val-' + key);
+      const subEl = document.getElementById('info-sub-' + key);
+      const valInput = document.getElementById('ctrl-val-' + key);
+      const subInput = document.getElementById('ctrl-sub-' + key);
+      if (valEl && valInput) valEl.textContent = valInput.value;
+      if (subEl && subInput) subEl.textContent = subInput.value;
+    });
+  }
+
+  // Initialize back-cover controls from the existing display content (single source of truth)
+  document.addEventListener('DOMContentLoaded', function () {
+    // Aims & Scope text
+    document.getElementById('ctrl-aims-text').value =
+      document.getElementById('scope-text-content').textContent.trim();
+
+    // Scope tags → comma-separated string
+    const tagSpans = document.getElementById('scope-tags-container').querySelectorAll('.tag');
+    document.getElementById('ctrl-scope-tags').value =
+      Array.from(tagSpans).map(s => s.textContent.trim()).join(', ');
+
+    // Journal Information cards
+    const fields = ['frequency', 'access', 'indexed', 'review', 'established', 'language'];
+    fields.forEach(key => {
+      const valEl = document.getElementById('info-val-' + key);
+      const subEl = document.getElementById('info-sub-' + key);
+      if (valEl) document.getElementById('ctrl-val-' + key).value = valEl.textContent.trim();
+      if (subEl) document.getElementById('ctrl-sub-' + key).value = subEl.textContent.trim();
+    });
+  });
 </script>
 
 </body>
