@@ -1883,7 +1883,7 @@
   }
 
   function getNormalizedXmlName(node) {
-    const rawName = node ? (node.localName || node.tagName || node.nodeName || '') : '';
+    const rawName = node ? (node.localName || node.nodeName || '') : '';
     return String(rawName).split(':').pop().toLowerCase();
   }
 
@@ -2164,7 +2164,7 @@
       if (structuredAuthorEls.length) {
         structuredAuthorEls.forEach(a => {
           const fname = getTextContent(a, ['fname', 'firstname', 'given-names', 'givenname', 'given_name']);
-          const lname = getTextContent(a, ['lname', 'lastname', 'surname', 'familyname', 'family_name']);
+          const lname = getTextContent(a, ['lname', 'lastname', 'surname', 'family-name', 'familyname', 'family_name']);
           const full  = getTextContent(a, ['name', 'full-name', 'display-name', 'string-name', 'authorname', 'author_name', 'fullname', 'full_name']);
           if (fname || lname) {
             authorNames.push((fname + ' ' + lname).trim());
@@ -2239,7 +2239,8 @@
         ...getElsByTag(art, 'keywords').flatMap(k => splitXmlListText(k.textContent)),
         ...splitXmlListText(getTextContent(art, ['keywordlist', 'keyword_list']))
       ].filter(Boolean);
-      // Removes duplicate keywords while preserving insertion order.
+      // Removes duplicate keywords while preserving insertion order when feeds expose
+      // both repeated <keyword> nodes and aggregated keyword list fields.
       keywords = Array.from(new Set(keywords));
     }
 
