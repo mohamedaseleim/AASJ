@@ -2009,6 +2009,72 @@
     return Array.from(parent.getElementsByTagName(tagName));
   }
 
+  function sanitizeXmlText(text) {
+    return (text || '').replace(/^\uFEFF/, '').trim();
+  }
+
+  const MAX_XML_TAG_CHARS_AFTER_FIRST = 120;
+  const XML_TEXT_PATTERN = new RegExp(`<\\?xml\\b|<\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_CHARS_AFTER_FIRST}}`, 'i');
+  const ESCAPED_XML_TEXT_PATTERN = new RegExp(`&lt;\\?xml\\b|&lt;\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_CHARS_AFTER_FIRST}}`, 'i');
+
+  function decodeHtmlEntities(text) {
+    const htmlDoc = new DOMParser().parseFromString(text || '', 'text/html');
+    return htmlDoc.documentElement ? htmlDoc.documentElement.textContent || '' : '';
+  }
+
+  function normalizeXmlUrl(url) {
+    return decodeHtmlEntities((url || '').trim())
+      .replace(/^view-source:/i, '')
+      .trim();
+  }
+
+  function looksLikeXmlText(text) {
+    return XML_TEXT_PATTERN.test(text || '');
+  }
+
+  function looksLikeEscapedXmlText(text) {
+    return ESCAPED_XML_TEXT_PATTERN.test(text || '');
+  }
+
+  function getXmlParseError(xmlDoc) {
+    return xmlDoc.querySelector('parsererror') ||
+           (xmlDoc.documentElement && xmlDoc.documentElement.nodeName === 'parsererror'
+             ? xmlDoc.documentElement : null);
+  }
+
+  function formatXmlParseErrorText(parseErr, maxParseErrLen) {
+    const text = parseErr ? (parseErr.textContent || '').trim() : '';
+    if (!text) return parseErr ? 'XML parser error with no details available.' : 'Unknown XML parser error.';
+    return text.length > maxParseErrLen
+      ? text.slice(0, maxParseErrLen) + '...'
+      : text;
+  }
+
+  function extractXmlCandidatesFromHtml(rawText) {
+    const htmlDoc = new DOMParser().parseFromString(rawText, 'text/html');
+    const candidates = [];
+    const collectXmlCandidate = text => {
+      const normalized = sanitizeXmlText(text);
+      if (!normalized) return;
+      if (looksLikeXmlText(normalized) || looksLikeEscapedXmlText(normalized)) {
+        candidates.push(normalized);
+      }
+    };
+
+    ['pre', 'code', 'xmp', 'textarea'].forEach(selector => {
+      htmlDoc.querySelectorAll(selector).forEach(el => {
+        collectXmlCandidate(el.textContent);
+      });
+    });
+
+    if (htmlDoc.body) {
+      collectXmlCandidate(htmlDoc.body.textContent);
+      collectXmlCandidate(htmlDoc.body.innerHTML);
+    }
+
+    return candidates;
+  }
+
   /* Extract one article object from an element (OJS native / JATS / OAI-DC) */
   function extractArticleData(art, isDublinCore) {
     let title, authors, fpage, lpage, doi, articleId, type, keywords;
@@ -2152,6 +2218,68 @@
     return articles;
   }
 
+  function parseXmlInput(rawText, maxParseErrLen) {
+    const text = sanitizeXmlText(rawText);
+    const parser = new DOMParser();
+    const candidates = [];
+    const seen = new Set();
+    const hasHtmlDocumentStructure = /^\s*(?:<!doctype html\b|<html\b)/i.test(text);
+    let lastParseError = null;
+    let fallbackResult = null;
+
+    const registerXmlCandidate = candidateText => {
+      const normalized = sanitizeXmlText(candidateText);
+      if (!normalized) return;
+      if (seen.has(normalized)) return;
+      seen.add(normalized);
+      candidates.push(normalized);
+    };
+
+    const addTextWithDecodedVariant = candidateText => {
+      const normalized = sanitizeXmlText(candidateText);
+      if (!normalized) return;
+      registerXmlCandidate(normalized);
+      if (looksLikeEscapedXmlText(normalized)) {
+        registerXmlCandidate(decodeHtmlEntities(normalized));
+      }
+    };
+
+    if (hasHtmlDocumentStructure) {
+      extractXmlCandidatesFromHtml(text).forEach(addTextWithDecodedVariant);
+    }
+
+    addTextWithDecodedVariant(text);
+
+    if (!hasHtmlDocumentStructure) {
+      extractXmlCandidatesFromHtml(text).forEach(addTextWithDecodedVariant);
+    }
+
+    for (const candidate of candidates) {
+      const xmlDoc = parser.parseFromString(candidate, 'application/xml');
+      const parseErr = getXmlParseError(xmlDoc);
+      if (parseErr) {
+        lastParseError = new Error('XML parse error: ' + formatXmlParseErrorText(parseErr, maxParseErrLen));
+        continue;
+      }
+
+      const articles = parseArticles(xmlDoc);
+      if (articles.length || articles._rawArticleCount) {
+        return { xmlDoc, articles };
+      }
+      if (!fallbackResult) {
+        fallbackResult = { xmlDoc, articles };
+      }
+    }
+
+    if (fallbackResult) return fallbackResult;
+    if (lastParseError) throw lastParseError;
+    throw new Error(
+      'XML parse error: unable to detect valid XML content after trying ' +
+      candidates.length + ' candidate(s) from ' + (hasHtmlDocumentStructure ? 'HTML-wrapped' : 'raw') + ' input. ' +
+      'Ensure the pasted content contains complete XML markup with matching opening and closing tags.'
+    );
+  }
+
   /* Fetch a URL through one CORS proxy entry, with a timeout.
      Each proxy entry is { label, getUrl(encodedTarget), extractText(response) } */
   async function fetchViaProxy(proxy, encodedTarget, timeoutMs) {
@@ -2236,7 +2364,7 @@
 
     const urlEl    = document.getElementById('ctrl-xml-url');
     const btn      = document.getElementById('ctrl-xml-btn');
-    const urlInput = urlEl ? urlEl.value.trim() : '';
+    const urlInput = normalizeXmlUrl(urlEl ? urlEl.value : '');
 
     if (!urlInput) {
       showXmlStatus('الرجاء إدخال رابط XML الخاص بالعدد.  (Please enter the issue XML URL.)', 'error');
@@ -2274,18 +2402,7 @@
         );
       }
 
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
-
-      // Check for parse errors (parsererror is in no namespace in all browsers)
-      const parseErr = xmlDoc.querySelector('parsererror') ||
-                       (xmlDoc.documentElement && xmlDoc.documentElement.nodeName === 'parsererror'
-                         ? xmlDoc.documentElement : null);
-      if (parseErr) {
-        throw new Error('XML parse error: ' + parseErr.textContent.slice(0, MAX_PARSE_ERR_LEN));
-      }
-
-      const articles = parseArticles(xmlDoc);
+      const { xmlDoc, articles } = parseXmlInput(xmlText, MAX_PARSE_ERR_LEN);
       if (!articles.length) {
         const diag = buildNullArticlesDiag(articles, xmlDoc);
         throw new Error(diag);
@@ -2305,7 +2422,7 @@
     const MAX_PARSE_ERR_LEN = 120;
     const pasteEl = document.getElementById('ctrl-xml-paste');
     const btn     = document.getElementById('ctrl-xml-paste-btn');
-    const xmlText = pasteEl ? pasteEl.value.trim() : '';
+    const xmlText = sanitizeXmlText(pasteEl ? pasteEl.value : '');
 
     if (!xmlText) {
       showXmlStatus('الرجاء لصق محتوى XML أولاً.  (Please paste the XML content first.)', 'error');
@@ -2314,17 +2431,7 @@
 
     if (btn) btn.disabled = true;
     try {
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
-
-      const parseErr = xmlDoc.querySelector('parsererror') ||
-                       (xmlDoc.documentElement && xmlDoc.documentElement.nodeName === 'parsererror'
-                         ? xmlDoc.documentElement : null);
-      if (parseErr) {
-        throw new Error('XML parse error: ' + parseErr.textContent.slice(0, MAX_PARSE_ERR_LEN));
-      }
-
-      const articles = parseArticles(xmlDoc);
+      const { xmlDoc, articles } = parseXmlInput(xmlText, MAX_PARSE_ERR_LEN);
       if (!articles.length) {
         const diag = buildNullArticlesDiag(articles, xmlDoc);
         throw new Error(diag);
