@@ -2013,9 +2013,9 @@
     return (text || '').replace(/^\uFEFF/, '').trim();
   }
 
-  const MAX_XML_TAG_NAME_EXTRA_CHARS = 120;
-  const XML_TEXT_PATTERN = new RegExp(`<\\?xml\\b|<\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_NAME_EXTRA_CHARS}}`, 'i');
-  const ESCAPED_XML_TEXT_PATTERN = new RegExp(`&lt;\\?xml\\b|&lt;\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_NAME_EXTRA_CHARS}}`, 'i');
+  const MAX_XML_TAG_CHARS_AFTER_FIRST = 120;
+  const XML_TEXT_PATTERN = new RegExp(`<\\?xml\\b|<\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_CHARS_AFTER_FIRST}}`, 'i');
+  const ESCAPED_XML_TEXT_PATTERN = new RegExp(`&lt;\\?xml\\b|&lt;\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_CHARS_AFTER_FIRST}}`, 'i');
 
   function decodeHtmlEntities(text) {
     const htmlDoc = new DOMParser().parseFromString(text || '', 'text/html');
@@ -2064,7 +2064,6 @@
     ['pre', 'code', 'xmp', 'textarea'].forEach(selector => {
       htmlDoc.querySelectorAll(selector).forEach(el => {
         collectXmlCandidate(el.textContent);
-        collectXmlCandidate(el.innerHTML);
       });
     });
 
@@ -2224,7 +2223,7 @@
     const parser = new DOMParser();
     const candidates = [];
     const seen = new Set();
-    const htmlLike = /^\s*(?:<!doctype html\b|<html\b)/i.test(text);
+    const hasHtmlDocumentStructure = /^\s*(?:<!doctype html\b|<html\b)/i.test(text);
     let lastParseError = null;
     let fallbackResult = null;
 
@@ -2245,13 +2244,13 @@
       }
     };
 
-    if (htmlLike) {
+    if (hasHtmlDocumentStructure) {
       extractXmlCandidatesFromHtml(text).forEach(addTextWithDecodedVariant);
     }
 
     addTextWithDecodedVariant(text);
 
-    if (!htmlLike) {
+    if (!hasHtmlDocumentStructure) {
       extractXmlCandidatesFromHtml(text).forEach(addTextWithDecodedVariant);
     }
 
@@ -2276,7 +2275,7 @@
     if (lastParseError) throw lastParseError;
     throw new Error(
       'XML parse error: unable to detect valid XML content after trying ' +
-      candidates.length + ' candidate(s) from ' + (htmlLike ? 'HTML-wrapped' : 'raw') + ' input. ' +
+      candidates.length + ' candidate(s) from ' + (hasHtmlDocumentStructure ? 'HTML-wrapped' : 'raw') + ' input. ' +
       'Ensure the pasted content contains complete XML markup with matching opening and closing tags.'
     );
   }
