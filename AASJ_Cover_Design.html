@@ -1882,26 +1882,40 @@
     el.style.display = 'block';
   }
 
+  function getNormalizedXmlName(node) {
+    const rawName = node ? (node.localName || node.baseName || node.tagName || node.nodeName || '') : '';
+    return String(rawName).split(':').pop().toLowerCase();
+  }
+
+  function getAttributeValue(el, attrNames) {
+    if (!el || !el.attributes) return '';
+    const attrs = Array.from(el.attributes);
+    for (const attrName of attrNames) {
+      const wanted = String(attrName || '').toLowerCase();
+      const match = attrs.find(attr => String(attr.name || '').toLowerCase() === wanted);
+      const value = match && typeof match.value === 'string' ? match.value.trim() : '';
+      if (value) return value;
+    }
+    return '';
+  }
+
+  function splitXmlListText(text) {
+    return (text || '')
+      .split(/(?:\s*[;\n|]\s*)+/)
+      .map(part => part.trim())
+      .filter(Boolean);
+  }
+
   /* Safely get trimmed text content of first matching child element.
-     Iterates ALL elements with each tag name and returns the first non-empty
-     text, so locale-keyed duplicates (e.g. <title locale="en_US"> empty,
-     <title locale="ar_IQ"> filled) are handled correctly.
-     Uses getElementsByTagNameNS('*', tag) so elements in any XML namespace
-     (e.g. xmlns="http://pkp.sfu.ca" as used by OJS / EKB journals) are found. */
+     Iterates ALL descendant elements matching each tag name case-insensitively
+     and returns the first non-empty text, so namespace-prefixed, PascalCase,
+     lowercase, and uppercase EKB/OJS/JATS variants are all handled. */
   function getTextContent(el, tagNames) {
     for (const tag of tagNames) {
-      const cap = tag.charAt(0).toUpperCase() + tag.slice(1);
-      // Try exact tag name, then first-letter-capitalised (EKB exports PascalCase tags).
-      const candidates = cap === tag ? [tag] : [tag, cap];
-      for (const t of candidates) {
-        const nodes = el.getElementsByTagNameNS
-          ? el.getElementsByTagNameNS('*', t)
-          : el.getElementsByTagName(t);
-        // Return the first element that has non-empty text content.
-        for (let i = 0; i < nodes.length; i++) {
-          const text = nodes[i].textContent.trim();
-          if (text) return text;
-        }
+      const nodes = getElsByTag(el, tag);
+      for (let i = 0; i < nodes.length; i++) {
+        const text = nodes[i].textContent.trim();
+        if (text) return text;
       }
     }
     return '';
@@ -2004,18 +2018,13 @@
     container.innerHTML = html;
   }
 
-  /* Helper: collect all elements matching a tag name in any namespace.
-     Also tries the first-letter-capitalised variant so that EKB XML tags
-     such as <Article>, <Author>, <Title> are found alongside lowercase ones. */
+  /* Helper: collect all descendant elements matching a tag name in any namespace,
+     ignoring case and namespace prefixes. */
   function getElsByTag(parent, tagName) {
-    const tryFn = parent.getElementsByTagNameNS
-      ? t => Array.from(parent.getElementsByTagNameNS('*', t))
-      : t => Array.from(parent.getElementsByTagName(t));
-    const result = tryFn(tagName);
-    if (result.length) return result;
-    // EKB exports PascalCase tags; try capitalised variant as fallback.
-    const cap = tagName.charAt(0).toUpperCase() + tagName.slice(1);
-    return cap !== tagName ? tryFn(cap) : result;
+    const wanted = String(tagName || '').toLowerCase();
+    if (!wanted || !parent || !parent.getElementsByTagName) return [];
+    return Array.from(parent.getElementsByTagName('*'))
+      .filter(node => getNormalizedXmlName(node) === wanted);
   }
 
   function sanitizeXmlText(text) {
@@ -2114,19 +2123,25 @@
       keywords = [];
     } else {
       // OJS native / JATS XML
-      title = getTextContent(art, ['article_title', 'article-title', 'title']) || '';
+      title = getTextContent(art, [
+        'article_title',
+        'article-title',
+        'articletitle',
+        'title',
+        'titletext'
+      ]) || '';
 
       // Authors — OJS 3.x <author>, JATS <contrib>, OJS 2.x inline text
       let authorNames = [];
-      const authorEls = [
+      const structuredAuthorEls = [
         ...getElsByTag(art, 'author'),
         ...getElsByTag(art, 'contrib')
       ];
-      if (authorEls.length) {
-        authorEls.forEach(a => {
-          const fname = getTextContent(a, ['fname', 'firstname', 'given-names', 'givenname', 'given_name', 'GivenName']);
-          const lname = getTextContent(a, ['lname', 'lastname', 'surname', 'familyname', 'family_name', 'FamilyName']);
-          const full  = getTextContent(a, ['name', 'full-name', 'display-name', 'string-name']);
+      if (structuredAuthorEls.length) {
+        structuredAuthorEls.forEach(a => {
+          const fname = getTextContent(a, ['fname', 'firstname', 'given-names', 'givenname', 'given_name']);
+          const lname = getTextContent(a, ['lname', 'lastname', 'surname', 'familyname', 'family_name']);
+          const full  = getTextContent(a, ['name', 'full-name', 'display-name', 'string-name', 'authorname', 'author_name', 'fullname', 'full_name']);
           if (fname || lname) {
             authorNames.push((fname + ' ' + lname).trim());
           } else if (full) {
@@ -2137,13 +2152,19 @@
           }
         });
       }
-      authors = authorNames.join(', ');
+      if (!authorNames.length) {
+        authorNames = [
+          ...getElsByTag(art, 'authorname'),
+          ...getElsByTag(art, 'author_name')
+        ].map(a => a.textContent.trim()).filter(Boolean);
+      }
+      authors = authorNames.join(', ') || getTextContent(art, ['authors', 'authornames', 'author_names']);
 
       // Pages: prefer fpage/lpage; fall back to OJS <pages>
-      fpage = getTextContent(art, ['fpage', 'start_page', 'startPage']);
-      lpage = getTextContent(art, ['lpage', 'end_page', 'endPage']);
+      fpage = getTextContent(art, ['fpage', 'start_page', 'startPage', 'firstpage', 'first_page']);
+      lpage = getTextContent(art, ['lpage', 'end_page', 'endPage', 'lastpage', 'last_page']);
       if (!fpage && !lpage) {
-        const pages = getTextContent(art, ['pages', 'page-range']);
+        const pages = getTextContent(art, ['pages', 'page-range', 'pagerange', 'page_range']);
         if (pages) {
           const m = pages.match(/^(\d+)\s*[-–]\s*(\d+)$/);
           if (m) { fpage = m[1]; lpage = m[2]; }
@@ -2152,27 +2173,43 @@
       }
 
       // DOI — several possible element names / attributes
-      doi = getTextContent(art, ['doi', 'DOI']);
+      doi = getTextContent(art, ['doi', 'article-doi', 'article_doi', 'articledoi']);
       if (!doi) {
         // JATS-style: <article-id pub-id-type="doi">
         getElsByTag(art, 'article-id').forEach(el => {
-          if (!doi && el.getAttribute('pub-id-type') === 'doi') doi = el.textContent.trim();
+          if (!doi && getAttributeValue(el, ['pub-id-type', 'pub_id_type', 'pubidtype']).toLowerCase() === 'doi') {
+            doi = el.textContent.trim();
+          }
         });
       }
       if (!doi) {
         // OJS style: <id type="doi">
         getElsByTag(art, 'id').forEach(el => {
-          if (!doi && el.getAttribute('type') === 'doi') doi = el.textContent.trim();
+          if (!doi && getAttributeValue(el, ['type']).toLowerCase() === 'doi') doi = el.textContent.trim();
         });
       }
 
       // Article type
-      const typeAttr = art.getAttribute ? (art.getAttribute('article-type') || '') : '';
-      const typeRaw  = typeAttr || getTextContent(art, ['article_type', 'article-type', 'type', 'section_ref']);
+      const typeAttr = getAttributeValue(art, ['article-type', 'article_type', 'articletype']);
+      const typeRaw  = typeAttr || getTextContent(art, [
+        'article_type',
+        'article-type',
+        'articletype',
+        'type',
+        'section_ref',
+        'section',
+        'sectiontitle',
+        'category'
+      ]);
       type = normalizeArticleType(typeRaw);
 
       // Keywords
-      keywords = getElsByTag(art, 'keyword').map(k => k.textContent.trim()).filter(Boolean);
+      keywords = [
+        ...getElsByTag(art, 'keyword').map(k => k.textContent.trim()),
+        ...getElsByTag(art, 'keywords').flatMap(k => splitXmlListText(k.textContent)),
+        ...splitXmlListText(getTextContent(art, ['keywordlist', 'keyword_list']))
+      ].filter(Boolean);
+      keywords = Array.from(new Set(keywords));
     }
 
     // Article ID: last numeric segment of DOI
