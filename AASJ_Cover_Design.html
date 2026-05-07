@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
   :root {
+    /* 4/3 = 96 CSS px per inch ÷ 72 pt per inch used by the live A4 design. */
     --print-scale-factor: 1.3333333333;
   }
 
@@ -1928,7 +1929,7 @@
         !monthEl && 'ctrl-month',
         !yearEl && 'ctrl-year'
       ].filter(Boolean);
-      console.warn('Print/PDF export title update skipped because cover controls were not found. Printing still works, but the exported PDF filename may be less descriptive:', missingIds.join(', '));
+      console.warn('Missing cover control elements for PDF title. Expected elements:', missingIds.join(', '));
       return;
     }
     document.title = `AASJ Cover - Vol ${volEl.value} Issue ${issueEl.value} - ${monthEl.value} ${yearEl.value}`;
@@ -1937,7 +1938,6 @@
   function printOrSavePdf() {
     updateCover();
     updateBackContent();
-    updateDocumentTitle();
     window.print();
   }
 
@@ -2036,7 +2036,6 @@
   window.addEventListener('beforeprint', function () {
     updateCover();
     updateBackContent();
-    updateDocumentTitle();
   });
 
   /* ══════════════════════════════════════════════════
