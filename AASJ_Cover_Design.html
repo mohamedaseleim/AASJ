@@ -2098,10 +2098,11 @@
       [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
     ];
     const numericValue = Number(num);
-    if (!Number.isFinite(numericValue)) {
+    const hasValidPageNumber = Number.isFinite(numericValue);
+    if (!hasValidPageNumber) {
       console.warn('Invalid TOC page number received; defaulting to 1.', num);
     }
-    const validatedValue = Number.isFinite(numericValue) ? Math.max(1, Math.floor(numericValue)) : 1;
+    const validatedValue = hasValidPageNumber ? Math.max(1, Math.floor(numericValue)) : 1;
     let value = validatedValue;
     let result = '';
     numerals.forEach(([amount, symbol]) => {
