@@ -934,23 +934,19 @@
       text-rendering: optimizeLegibility;
       /* 595×842 matches A4 at 72 points per inch; browsers print at 96 CSS px/in, so 4/3
           keeps the live design proportional when exporting to full-size A4. */
+      transform: scale(var(--print-scale-factor));
+      transform-origin: top left;
       break-after: page;
       page-break-after: always;
     }
 
     @supports (zoom: 1) {
       .page-surface {
+        /* Chromium prints more reliably with zoom because the scaled page still participates in layout. */
         zoom: var(--print-scale-factor);
+        transform: none;
       }
     }
-
-    @supports not (zoom: 1) {
-      .page-surface {
-        transform: scale(var(--print-scale-factor));
-        transform-origin: top left;
-      }
-    }
-
     .page-surface:last-child {
       break-after: auto;
       page-break-after: auto;
@@ -1978,8 +1974,8 @@
     if (document.fonts) {
       try {
         await document.fonts.ready;
-      } catch {
-        // Continue to print if the Fonts API rejects while loading remote web fonts.
+      } catch (error) {
+        console.warn('Continuing print export with fallback fonts because web fonts did not finish loading.', error);
       }
     }
 
