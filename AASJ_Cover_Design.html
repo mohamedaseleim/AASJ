@@ -1922,7 +1922,7 @@
   const XML_KEYWORD_EDGE_PUNCTUATION = /(^[,;|،؛\s]+|[,;|،؛\s]+$)/g;
 
   function normalizeXmlKeywordText(text) {
-    return String(text || '')
+    return (text || '')
       .replace(XML_KEYWORD_LABEL_PATTERN, '')
       .trim()
       .replace(XML_KEYWORD_EDGE_PUNCTUATION, '')
@@ -2418,7 +2418,7 @@
       articles: xmlArticles,
       usedHtmlFallback: false,
       parseError: new Error(
-        'XML/HTML parse error: strict XML parsing failed with "' + formatXmlParseErrorText(parseErr, maxParseErrLen) + '"' +
+        'Unable to parse article data: strict XML parsing failed with "' + formatXmlParseErrorText(parseErr, maxParseErrLen) + '"' +
         '. HTML fallback also did not produce recognizable article data.'
       )
     };
