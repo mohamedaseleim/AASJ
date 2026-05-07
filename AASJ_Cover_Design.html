@@ -2230,6 +2230,50 @@
       .replace(/"/g, '&quot;');
   }
 
+  const ALLOWED_TITLE_INLINE_TAGS = new Set(['i', 'em', 'sub', 'sup', 'b', 'strong', 'u']);
+
+  function serializeNodeChildren(node) {
+    if (!node || !node.childNodes || !node.childNodes.length) return '';
+    const serializer = new XMLSerializer();
+    return Array.from(node.childNodes).map(child => serializer.serializeToString(child)).join('');
+  }
+
+  function sanitizeTitleMarkup(markup) {
+    const htmlDoc = new DOMParser().parseFromString('<!DOCTYPE html><html><body></body></html>', 'text/html');
+    const container = htmlDoc.createElement('div');
+    container.innerHTML = markup || '';
+    const TEXT_NODE = 3;
+    const ELEMENT_NODE = 1;
+
+    const sanitizeNode = node => {
+      if (!node) return '';
+      if (node.nodeType === TEXT_NODE) {
+        return escapeHtml((node.textContent || '').replace(/\s+/g, ' '));
+      }
+      if (node.nodeType !== ELEMENT_NODE) return '';
+
+      const tagName = (node.localName || node.nodeName || '').toLowerCase();
+      const innerHtml = Array.from(node.childNodes).map(sanitizeNode).join('');
+      if (!ALLOWED_TITLE_INLINE_TAGS.has(tagName)) return innerHtml;
+      return '<' + tagName + '>' + innerHtml + '</' + tagName + '>';
+    };
+
+    return Array.from(container.childNodes).map(sanitizeNode).join('').trim();
+  }
+
+  function getFormattedTextContent(el, tagNames) {
+    for (const tag of tagNames) {
+      const nodes = getElsByTag(el, tag);
+      for (let i = 0; i < nodes.length; i++) {
+        const text = nodes[i].textContent.trim();
+        const formattedMarkup = sanitizeTitleMarkup(serializeNodeChildren(nodes[i]));
+        if (formattedMarkup) return formattedMarkup;
+        if (text) return escapeHtml(text);
+      }
+    }
+    return '';
+  }
+
   /* Build HTML for a single TOC article row */
   function buildArticleHtml(art, num) {
     const numStr  = String(num).padStart(2, '0');
@@ -2268,7 +2312,7 @@
         '<div class="art-num-line"></div></div>' +
         '<div class="art-content">' +
           '<span class="art-type-tag ' + typeClass + '">' + typeLabel + '</span>' +
-          '<div class="art-title">' + escapeHtml(art.title) + '</div>' +
+          '<div class="art-title">' + sanitizeTitleMarkup(art.title) + '</div>' +
           authorsHtml + kwHtml +
         '</div>' +
         '<div class="art-meta">' +
@@ -2556,7 +2600,7 @@
           }
           return '';
         })();
-      title   = getDC('title');
+      title   = getFormattedTextContent(art, ['title']) || getDC('title');
       const creatorEls = art.getElementsByTagNameNS ? art.getElementsByTagNameNS(DC, 'creator')
                                                     : art.getElementsByTagName('creator');
       authors = Array.from(creatorEls).map(e => e.textContent.trim()).filter(Boolean).join(', ');
@@ -2567,7 +2611,7 @@
       keywords = collectXmlKeywords(art);
     } else {
       // OJS native / JATS XML
-      title = getTextContent(art, [
+      title = getFormattedTextContent(art, [
         'article_title',
         'article-title',
         'articletitle',
@@ -2726,7 +2770,7 @@
       .trim();
   }
 
-  function extractRawTagText(blockText, tagNames) {
+  function extractRawTagText(blockText, tagNames, options = {}) {
     const source = String(blockText || '');
     for (const tagName of tagNames) {
       const escapedTag = escapeRegexLiteral(tagName);
@@ -2736,7 +2780,9 @@
       );
       const closedTagMatch = source.match(closedTagPattern);
       if (closedTagMatch && closedTagMatch[1]) {
-        const cleanedClosedText = cleanRawXmlText(closedTagMatch[1]);
+        const cleanedClosedText = options.preserveFormatting
+          ? sanitizeTitleMarkup(closedTagMatch[1])
+          : cleanRawXmlText(closedTagMatch[1]);
         if (cleanedClosedText) return cleanedClosedText;
       }
 
@@ -2746,11 +2792,35 @@
       );
       const openTagMatch = source.match(openTagPattern);
       if (openTagMatch && openTagMatch[1]) {
-        const cleanedOpenText = cleanRawXmlText(openTagMatch[1]);
+        const cleanedOpenText = options.preserveFormatting
+          ? sanitizeTitleMarkup(openTagMatch[1])
+          : cleanRawXmlText(openTagMatch[1]);
         if (cleanedOpenText) return cleanedOpenText;
       }
     }
     return '';
+  }
+
+  function containsUnsupportedTitleMarkup(title) {
+    if (!/(?:<|&lt;)/i.test(title || '')) return false;
+    const htmlDoc = new DOMParser().parseFromString('<!DOCTYPE html><html><body></body></html>', 'text/html');
+    const container = htmlDoc.createElement('div');
+    container.innerHTML = title || '';
+    let hasUnsupportedMarkup = false;
+
+    const visitNode = node => {
+      if (!node || hasUnsupportedMarkup) return;
+      if (node.nodeType !== 1) return;
+      const tagName = (node.localName || node.nodeName || '').toLowerCase();
+      if (!ALLOWED_TITLE_INLINE_TAGS.has(tagName) || node.attributes.length) {
+        hasUnsupportedMarkup = true;
+        return;
+      }
+      Array.from(node.childNodes).forEach(visitNode);
+    };
+
+    Array.from(container.childNodes).forEach(visitNode);
+    return hasUnsupportedMarkup;
   }
 
   function parseArticlesFromRawBlocks(rawText, parser) {
@@ -2786,8 +2856,8 @@
       if (!blockEl) return;
 
       const data = extractArticleData(blockEl, isDublinCore);
-      const rawTitle = extractRawTagText(block, titleTags);
-      if (rawTitle && (!data.title || /(?:<|&lt;)/i.test(data.title))) {
+      const rawTitle = extractRawTagText(block, titleTags, { preserveFormatting: true });
+      if (rawTitle && (!data.title || containsUnsupportedTitleMarkup(data.title))) {
         data.title = rawTitle;
       }
       if (data.title) {
@@ -2805,7 +2875,7 @@
       articles.length > 0 &&
       articles.every(article => {
         const title = article && typeof article.title === 'string' ? article.title.trim() : '';
-        return !!title && !/(?:<|&lt;)/i.test(title);
+        return !!title && !containsUnsupportedTitleMarkup(title);
       });
   }
 
