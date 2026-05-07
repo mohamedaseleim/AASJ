@@ -1929,15 +1929,20 @@
         !monthEl && 'ctrl-month',
         !yearEl && 'ctrl-year'
       ].filter(Boolean);
-      console.warn('Missing cover control elements for PDF title. Expected elements:', missingIds.join(', '));
+      console.warn('Missing cover control elements for PDF title. Missing elements:', missingIds.join(', '));
       return;
     }
     document.title = `AASJ Cover - Vol ${volEl.value} Issue ${issueEl.value} - ${monthEl.value} ${yearEl.value}`;
   }
 
-  function printOrSavePdf() {
+  function prepareForPrint() {
+    // updateCover refreshes the visible metadata and the PDF filename via updateDocumentTitle().
     updateCover();
     updateBackContent();
+  }
+
+  function printOrSavePdf() {
+    prepareForPrint();
     window.print();
   }
 
@@ -2034,8 +2039,7 @@
   });
 
   window.addEventListener('beforeprint', function () {
-    updateCover();
-    updateBackContent();
+    prepareForPrint();
   });
 
   /* ══════════════════════════════════════════════════
