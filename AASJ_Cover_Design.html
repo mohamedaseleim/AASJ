@@ -1943,19 +1943,19 @@
 
   function collectXmlKeywords(art) {
     const keywords = [];
-    const addKeywordsFromValues = (values, useCommaDelimiters) => {
+    const processAndAddKeywords = (values, useCommaDelimiters) => {
       values.forEach(value => {
         keywords.push(...splitXmlListText(value, { useCommaDelimiters }));
       });
     };
 
-    addKeywordsFromValues(getElsByTag(art, 'keyword').map(el => el.textContent), false);
-    addKeywordsFromValues(getElsByTag(art, 'kwd').map(el => el.textContent), false);
-    addKeywordsFromValues(getElsByTag(art, 'subject').map(el => el.textContent), true);
-    addKeywordsFromValues(getElsByTag(art, 'keywords').map(el => el.textContent), true);
-    addKeywordsFromValues(getElsByTag(art, 'subjects').map(el => el.textContent), true);
-    addKeywordsFromValues(getElsByTag(art, 'keywordlist').map(el => el.textContent), true);
-    addKeywordsFromValues(getElsByTag(art, 'keyword_list').map(el => el.textContent), true);
+    processAndAddKeywords(getElsByTag(art, 'keyword').map(el => el.textContent), false);
+    processAndAddKeywords(getElsByTag(art, 'kwd').map(el => el.textContent), false);
+    processAndAddKeywords(getElsByTag(art, 'subject').map(el => el.textContent), true);
+    processAndAddKeywords(getElsByTag(art, 'keywords').map(el => el.textContent), true);
+    processAndAddKeywords(getElsByTag(art, 'subjects').map(el => el.textContent), true);
+    processAndAddKeywords(getElsByTag(art, 'keywordlist').map(el => el.textContent), true);
+    processAndAddKeywords(getElsByTag(art, 'keyword_list').map(el => el.textContent), true);
 
     return Array.from(new Set(keywords.map(normalizeXmlKeywordText).filter(Boolean)));
   }
@@ -2418,7 +2418,7 @@
       articles: xmlArticles,
       usedHtmlFallback: false,
       parseError: new Error(
-        'Strict XML parse error: ' + formatXmlParseErrorText(parseErr, maxParseErrLen) +
+        'XML/HTML parse error: strict XML parsing failed with "' + formatXmlParseErrorText(parseErr, maxParseErrLen) + '"' +
         '. HTML fallback also did not produce recognizable article data.'
       )
     };
