@@ -1904,6 +1904,7 @@
   /* Split keyword lists exported either as repeated lines or combined
      semicolon/pipe-delimited strings used by some EKB feeds. */
   const XML_KEYWORD_LABELS = [
+    // Stored as strings because they are joined into one RegExp pattern below.
     'key\\s*words?',
     'index\\s*terms?',
     'subjects?',
@@ -2598,7 +2599,7 @@
       renderTocArticles(articles);
       showXmlStatus(
         '✓ تم تحميل ' + articles.length + ' بحث/بحوث بنجاح' +
-        (usedHtmlFallback ? ' مع تصحيح تلقائي للأخطاء البنيوية في XML' : '') +
+        (usedHtmlFallback ? ' مع تصحيح تلقائي للأخطاء الهيكلية في XML' : '') +
         '.  (' + articles.length + ' article(s) loaded' +
         (usedHtmlFallback ? ' via fault-tolerant HTML fallback' : '') +
         '.)',
@@ -2634,7 +2635,7 @@
       renderTocArticles(articles);
       showXmlStatus(
         '✓ تم تحميل ' + articles.length + ' بحث/بحوث بنجاح' +
-        (usedHtmlFallback ? ' مع تصحيح تلقائي للأخطاء البنيوية في XML' : '') +
+        (usedHtmlFallback ? ' مع تصحيح تلقائي للأخطاء الهيكلية في XML' : '') +
         '.  (' + articles.length + ' article(s) loaded' +
         (usedHtmlFallback ? ' via fault-tolerant HTML fallback' : '') +
         '.)',
