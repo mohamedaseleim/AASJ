@@ -1907,8 +1907,10 @@
     'key\\s*words?',
     'index\\s*terms?',
     'subjects?',
+    // Arabic: "keywords"
     'الكلمات\\s+المفتاحية'
   ];
+  // Accept ":" plus common full-width/en-dash/em-dash variants seen in pasted feeds.
   const XML_KEYWORD_LABEL_PATTERN = new RegExp(
     '^\\s*(?:' + XML_KEYWORD_LABELS.join('|') + ')\\s*[:：\\-–—]\\s*',
     'iu'
@@ -1922,6 +1924,7 @@
       .replace(XML_KEYWORD_LABEL_PATTERN, '')
       .trim()
       .replace(/^[,;|،؛\s]+|[,;|،؛\s]+$/g, '')
+      // Trim again because removing edge punctuation can expose surrounding spaces.
       .trim();
   }
 
