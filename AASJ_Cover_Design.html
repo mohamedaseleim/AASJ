@@ -904,7 +904,8 @@
       margin: 0 !important;
       /* 595×842 matches A4 at 72 DPI; browsers print at 96 CSS px/in, so 4/3
          keeps the live design proportional when exporting to full-size A4. */
-      zoom: 1.3333333333;
+      transform: scale(1.3333333333);
+      transform-origin: top left;
       break-after: page;
       page-break-after: always;
     }
@@ -1263,10 +1264,8 @@
   <div class="export-actions">
     <button id="ctrl-print-btn" class="ctrl-btn" type="button" onclick="printOrSavePdf()">Print / Save PDF</button>
     <div class="export-note">
-      لطباعة الصفحات أو حفظها كملف PDF بأعلى جودة، افتح نافذة الطباعة ثم فعّل
-      <strong>Background graphics</strong> واترك <strong>Scale</strong> على <strong>100%</strong>.
-      For the best PDF quality, enable <strong>Background graphics</strong> and keep
-      <strong>Scale</strong> at <strong>100%</strong> in the print dialog.
+      <span lang="ar" dir="rtl">لطباعة الصفحات أو حفظها كملف PDF بأعلى جودة، افتح نافذة الطباعة ثم فعّل <strong>Background graphics</strong> واترك <strong>Scale</strong> على <strong>100%</strong>.</span>
+      <span lang="en">For the best PDF quality, enable <strong>Background graphics</strong> and keep <strong>Scale</strong> at <strong>100%</strong> in the print dialog.</span>
     </div>
   </div>
 </div>
@@ -1916,7 +1915,13 @@
     const monthEl = document.getElementById('ctrl-month');
     const yearEl = document.getElementById('ctrl-year');
     if (!volEl || !issueEl || !monthEl || !yearEl) {
-      console.warn('Print/PDF export title update skipped because one or more cover controls were not found.');
+      const missingIds = [
+        !volEl && 'ctrl-vol',
+        !issueEl && 'ctrl-issue',
+        !monthEl && 'ctrl-month',
+        !yearEl && 'ctrl-year'
+      ].filter(Boolean);
+      console.warn('Print/PDF export title update skipped because cover controls were not found:', missingIds.join(', '));
       return;
     }
     document.title = `AASJ Cover - Vol ${volEl.value} Issue ${issueEl.value} - ${monthEl.value} ${yearEl.value}`;
