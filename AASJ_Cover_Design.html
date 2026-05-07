@@ -2058,7 +2058,7 @@
   const MAX_XML_TAG_CHARS_AFTER_FIRST = 120;
   const XML_TEXT_PATTERN = new RegExp(`<\\?xml\\b|<\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_CHARS_AFTER_FIRST}}`, 'i');
   const ESCAPED_XML_TEXT_PATTERN = new RegExp(`&lt;\\?xml\\b|&lt;\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_CHARS_AFTER_FIRST}}`, 'i');
-  const DOI_VALUE_PATTERN = '10\\.\\d{4,9}\\\/[-._;()/:A-Za-z0-9]+';
+  const DOI_VALUE_PATTERN = '10\\.\\d{4,9}/[-._;()/:A-Za-z0-9]+';
   const DOI_PREFIX_BOUNDARY_CHARS = String.raw`[\s([{"'“‘]`;
   const DOI_SUFFIX_BOUNDARY_CHARS = String.raw`[\s)\]}",'”’]`;
 
@@ -2069,6 +2069,7 @@
 
   function cleanExtractedDoi(doi) {
     const trimmed = (doi || '').trim();
+    // Trim a single sentence-ending period that often appears in copied prose around a DOI.
     return /[A-Za-z0-9]\.$/.test(trimmed) ? trimmed.slice(0, -1) : trimmed;
   }
 
