@@ -912,7 +912,6 @@
       print-color-adjust: exact !important;
       color-adjust: exact !important;
       forced-color-adjust: none !important;
-      text-rendering: geometricPrecision;
     }
 
     .page-surface svg,
@@ -932,6 +931,7 @@
       page-break-inside: avoid;
       image-rendering: high-quality;
       image-rendering: -webkit-optimize-contrast;
+      text-rendering: optimizeLegibility;
       /* 595×842 matches A4 at 72 points per inch; browsers print at 96 CSS px/in, so 4/3
           keeps the live design proportional when exporting to full-size A4. */
       break-after: page;
@@ -1975,11 +1975,11 @@
   }
 
   async function waitForPrintLayout() {
-    if (document.fonts && document.fonts.ready) {
+    if (document.fonts) {
       try {
         await document.fonts.ready;
-      } catch (_) {
-        // Continue to print even if the browser cannot report font readiness.
+      } catch (fontLoadingError) {
+        // Continue to print if the Fonts API rejects while loading remote web fonts.
       }
     }
 
