@@ -2461,6 +2461,15 @@
     return articles;
   }
 
+  function hasUsableRecoveredArticleTitles(articles) {
+    return Array.isArray(articles) &&
+      articles.length > 0 &&
+      articles.every(article => {
+        const title = article && typeof article.title === 'string' ? article.title.trim() : '';
+        return !!title && !/(?:<|&lt;)/i.test(title);
+      });
+  }
+
   /**
    * Parse one candidate string using strict XML first, then tolerant HTML if needed.
    * @param {string} candidate
@@ -2487,7 +2496,7 @@
     const htmlDoc = parser.parseFromString(candidate, 'text/html');
     const htmlArticles = parseArticles(htmlDoc);
     const rawBlockArticles = parseArticlesFromRawBlocks(candidate, parser);
-    if (rawBlockArticles.length > htmlArticles.length) {
+    if (rawBlockArticles.length > htmlArticles.length && hasUsableRecoveredArticleTitles(rawBlockArticles)) {
       return {
         doc: htmlDoc,
         articles: rawBlockArticles,
