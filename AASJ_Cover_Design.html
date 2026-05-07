@@ -2372,6 +2372,36 @@
     return articles;
   }
 
+  function tryParseArticleCandidate(candidate, parser, maxParseErrLen) {
+    const xmlDoc = parser.parseFromString(candidate, 'application/xml');
+    const parseErr = getXmlParseError(xmlDoc);
+    if (!parseErr) {
+      return {
+        doc: xmlDoc,
+        articles: parseArticles(xmlDoc),
+        usedHtmlFallback: false
+      };
+    }
+
+    const htmlDoc = parser.parseFromString(candidate, 'text/html');
+    const htmlArticles = parseArticles(htmlDoc);
+    if (htmlArticles.length || htmlArticles._rawArticleCount) {
+      return {
+        doc: htmlDoc,
+        articles: htmlArticles,
+        usedHtmlFallback: true,
+        parseError: new Error('XML parse error: ' + formatXmlParseErrorText(parseErr, maxParseErrLen))
+      };
+    }
+
+    return {
+      doc: xmlDoc,
+      articles: parseArticles(xmlDoc),
+      usedHtmlFallback: false,
+      parseError: new Error('XML parse error: ' + formatXmlParseErrorText(parseErr, maxParseErrLen))
+    };
+  }
+
   function parseXmlInput(rawText, maxParseErrLen) {
     const text = sanitizeXmlText(rawText);
     const parser = new DOMParser();
@@ -2409,28 +2439,25 @@
     }
 
     for (const candidate of candidates) {
-      const xmlDoc = parser.parseFromString(candidate, 'application/xml');
-      const parseErr = getXmlParseError(xmlDoc);
-      if (parseErr) {
-        lastParseError = new Error('XML parse error: ' + formatXmlParseErrorText(parseErr, maxParseErrLen));
-        continue;
+      const result = tryParseArticleCandidate(candidate, parser, maxParseErrLen);
+      const { doc, articles, parseError, usedHtmlFallback } = result;
+      if (parseError) {
+        lastParseError = parseError;
       }
-
-      const articles = parseArticles(xmlDoc);
       if (articles.length || articles._rawArticleCount) {
-        return { xmlDoc, articles };
+        return { xmlDoc: doc, articles, usedHtmlFallback: !!usedHtmlFallback };
       }
       if (!fallbackResult) {
-        fallbackResult = { xmlDoc, articles };
+        fallbackResult = { xmlDoc: doc, articles, usedHtmlFallback: !!usedHtmlFallback };
       }
     }
 
     if (fallbackResult) return fallbackResult;
     if (lastParseError) throw lastParseError;
     throw new Error(
-      'XML parse error: unable to detect valid XML content after trying ' +
+      'XML parse error: unable to detect valid XML or fault-tolerant HTML content after trying ' +
       candidates.length + ' candidate(s) from ' + (hasHtmlDocumentStructure ? 'HTML-wrapped' : 'raw') + ' input. ' +
-      'Ensure the pasted content contains complete XML markup with matching opening and closing tags.'
+      'Ensure the pasted content contains recognizable article tags or complete XML markup with matching opening and closing tags.'
     );
   }
 
@@ -2556,14 +2583,21 @@
         );
       }
 
-      const { xmlDoc, articles } = parseXmlInput(xmlText, MAX_PARSE_ERR_LEN);
+      const { xmlDoc, articles, usedHtmlFallback } = parseXmlInput(xmlText, MAX_PARSE_ERR_LEN);
       if (!articles.length) {
         const diag = buildNullArticlesDiag(articles, xmlDoc);
         throw new Error(diag);
       }
 
       renderTocArticles(articles);
-      showXmlStatus('✓ تم تحميل ' + articles.length + ' بحث/بحوث بنجاح.  (' + articles.length + ' article(s) loaded.)', 'success');
+      showXmlStatus(
+        '✓ تم تحميل ' + articles.length + ' بحث/بحوث بنجاح' +
+        (usedHtmlFallback ? ' مع تصحيح تلقائي للأخطاء البنيوية في XML' : '') +
+        '.  (' + articles.length + ' article(s) loaded' +
+        (usedHtmlFallback ? ' via fault-tolerant HTML fallback' : '') +
+        '.)',
+        'success'
+      );
     } catch (err) {
       showXmlStatus('✗ خطأ: ' + err.message, 'error');
     } finally {
@@ -2585,14 +2619,21 @@
 
     if (btn) btn.disabled = true;
     try {
-      const { xmlDoc, articles } = parseXmlInput(xmlText, MAX_PARSE_ERR_LEN);
+      const { xmlDoc, articles, usedHtmlFallback } = parseXmlInput(xmlText, MAX_PARSE_ERR_LEN);
       if (!articles.length) {
         const diag = buildNullArticlesDiag(articles, xmlDoc);
         throw new Error(diag);
       }
 
       renderTocArticles(articles);
-      showXmlStatus('✓ تم تحميل ' + articles.length + ' بحث/بحوث بنجاح.  (' + articles.length + ' article(s) loaded.)', 'success');
+      showXmlStatus(
+        '✓ تم تحميل ' + articles.length + ' بحث/بحوث بنجاح' +
+        (usedHtmlFallback ? ' مع تصحيح تلقائي للأخطاء البنيوية في XML' : '') +
+        '.  (' + articles.length + ' article(s) loaded' +
+        (usedHtmlFallback ? ' via fault-tolerant HTML fallback' : '') +
+        '.)',
+        'success'
+      );
     } catch (err) {
       showXmlStatus('✗ خطأ: ' + err.message, 'error');
     } finally {
