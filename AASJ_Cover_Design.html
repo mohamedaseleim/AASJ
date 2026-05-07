@@ -2058,8 +2058,8 @@
   const MAX_XML_TAG_CHARS_AFTER_FIRST = 120;
   const XML_TEXT_PATTERN = new RegExp(`<\\?xml\\b|<\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_CHARS_AFTER_FIRST}}`, 'i');
   const ESCAPED_XML_TEXT_PATTERN = new RegExp(`&lt;\\?xml\\b|&lt;\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_CHARS_AFTER_FIRST}}`, 'i');
-  // DOI registrant codes are conventionally 4–9 digits after the 10. prefix.
-  const DOI_VALUE_SOURCE = String.raw`10\.\d{4,9}/[-._;()/:A-Za-z0-9]+`;
+  // Accept DOI registrant codes of 4+ digits after the 10. prefix.
+  const DOI_VALUE_SOURCE = String.raw`10\.\d{4,}/[-._;()/:A-Za-z0-9]+`;
   const DOI_PREFIX_BOUNDARY_CHARS = String.raw`\s([{"'“‘`;
   const DOI_SUFFIX_BOUNDARY_CHARS = String.raw`\s)\]}",'”’`;
   const DOI_TEXT_PATTERNS = [
@@ -2075,8 +2075,8 @@
 
   function cleanExtractedDoi(doi) {
     const trimmed = (doi || '').trim();
-    // Trim only a trailing alnum + "." prose ending; preserve DOI-valid punctuation like ")" or "]".
-    return /[A-Za-z0-9]\.$/.test(trimmed) ? trimmed.slice(0, -1) : trimmed;
+    // Trim one trailing prose period that may be copied with surrounding text.
+    return trimmed.endsWith('.') ? trimmed.slice(0, -1) : trimmed;
   }
 
   function extractDoiFromText(text) {
