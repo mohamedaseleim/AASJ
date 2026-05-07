@@ -2233,13 +2233,13 @@
   const ALLOWED_TITLE_INLINE_TAGS = new Set(['i', 'em', 'sub', 'sup', 'b', 'strong', 'u']);
 
   function serializeNodeChildren(node) {
-    if (!node || !node.childNodes) return '';
+    if (!node || !node.childNodes || !node.childNodes.length) return '';
     const serializer = new XMLSerializer();
     return Array.from(node.childNodes).map(child => serializer.serializeToString(child)).join('');
   }
 
   function sanitizeTitleMarkup(markup) {
-    const htmlDoc = new DOMParser().parseFromString('', 'text/html');
+    const htmlDoc = new DOMParser().parseFromString('<!DOCTYPE html><html><body></body></html>', 'text/html');
     const container = htmlDoc.createElement('div');
     container.innerHTML = markup || '';
     const TEXT_NODE = 3;
@@ -2265,8 +2265,8 @@
     for (const tag of tagNames) {
       const nodes = getElsByTag(el, tag);
       for (let i = 0; i < nodes.length; i++) {
-        const text = nodes[i].textContent.trim();
-        if (text) return sanitizeTitleMarkup(serializeNodeChildren(nodes[i]));
+        const formattedMarkup = sanitizeTitleMarkup(serializeNodeChildren(nodes[i]));
+        if (formattedMarkup || nodes[i].textContent.trim()) return formattedMarkup;
       }
     }
     return '';
@@ -2802,7 +2802,7 @@
 
   function containsUnsupportedTitleMarkup(title) {
     if (!/(?:<|&lt;)/i.test(title || '')) return false;
-    const htmlDoc = new DOMParser().parseFromString('', 'text/html');
+    const htmlDoc = new DOMParser().parseFromString('<!DOCTYPE html><html><body></body></html>', 'text/html');
     const container = htmlDoc.createElement('div');
     container.innerHTML = title || '';
     let hasUnsupportedMarkup = false;
@@ -2811,7 +2811,7 @@
       if (!node || hasUnsupportedMarkup) return;
       if (node.nodeType !== 1) return;
       const tagName = (node.localName || node.nodeName || '').toLowerCase();
-      if (!ALLOWED_TITLE_INLINE_TAGS.has(tagName) || (node.attributes && node.attributes.length)) {
+      if (!ALLOWED_TITLE_INLINE_TAGS.has(tagName) || node.attributes.length) {
         hasUnsupportedMarkup = true;
         return;
       }
