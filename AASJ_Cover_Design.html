@@ -2064,6 +2064,33 @@
     return htmlDoc.documentElement ? htmlDoc.documentElement.textContent || '' : '';
   }
 
+  function cleanExtractedDoi(doi) {
+    return (doi || '')
+      .trim()
+      .replace(/[)\],;:]+$/g, '')
+      .replace(/\.+$/g, match => (match.length === 1 ? '' : match));
+  }
+
+  function extractDoiFromText(text) {
+    const normalized = decodeHtmlEntities(text || '')
+      .replace(/\u00A0/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!normalized) return '';
+
+    const patterns = [
+      /(?:^|[\s([{"'“‘])doi\s*[:=]?\s*(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)(?=$|[\s)\]}",'”’])/i,
+      /(?:^|[\s([{"'“‘])(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)(?=$|[\s)\]}",'”’])/i,
+      /https?:\/\/(?:dx\.)?doi\.org\/(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)/i
+    ];
+
+    for (const pattern of patterns) {
+      const match = normalized.match(pattern);
+      if (match && match[1]) return cleanExtractedDoi(match[1]);
+    }
+    return '';
+  }
+
   function normalizeXmlUrl(url) {
     return decodeHtmlEntities((url || '').trim())
       .replace(/^view-source:/i, '')
@@ -2218,6 +2245,9 @@
         getElsByTag(art, 'id').forEach(el => {
           if (!doi && getAttributeValue(el, ['type']).toLowerCase() === 'doi') doi = el.textContent.trim();
         });
+      }
+      if (!doi) {
+        doi = extractDoiFromText(art.textContent);
       }
 
       // Article type
