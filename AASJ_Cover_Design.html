@@ -812,6 +812,36 @@
   .ctrl-btn:hover  { background: #E8B84B; }
   .ctrl-btn:active { background: #a87614; }
   .ctrl-btn:disabled { background: #555; color: #999; cursor: not-allowed; }
+  .ctrl-btn.secondary {
+    background: transparent;
+    color: #E8B84B;
+    border: 1px solid rgba(201,148,26,0.55);
+  }
+  .ctrl-btn.secondary:hover { background: rgba(201,148,26,0.12); }
+  .ctrl-btn.secondary:active { background: rgba(201,148,26,0.2); }
+  .export-controls {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px 24px;
+    background: #1f2937;
+    border-bottom: 2px solid #C9941A;
+    margin-bottom: 32px;
+  }
+  .export-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .export-note {
+    font-size: 11px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.72);
+    max-width: 760px;
+  }
+  .export-note strong { color: #E8B84B; }
   .xml-status {
     font-size: 11px;
     color: rgba(255,255,255,0.6);
@@ -824,6 +854,64 @@
   .xml-status.success { color: #4ade80; border-color: rgba(74,222,128,0.3);  background: rgba(74,222,128,0.05);  }
   .xml-status.error   { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.05); }
   .xml-status.loading { color: #fbbf24; border-color: rgba(251,191,36,0.3);  background: rgba(251,191,36,0.05);  }
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  @media print {
+    html, body {
+      width: 210mm;
+      min-width: 210mm;
+      background: #fff !important;
+    }
+
+    body {
+      display: block !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #fff !important;
+    }
+
+    .cover-controls,
+    .back-content-controls,
+    .xml-load-controls,
+    .export-controls,
+    .design-label,
+    .spine {
+      display: none !important;
+    }
+
+    .cover-wrapper,
+    .covers-row,
+    #toc-pages-container {
+      display: block !important;
+      width: 210mm !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      gap: 0 !important;
+    }
+
+    .page-surface,
+    .page-surface * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    .page-surface {
+      box-shadow: none !important;
+      margin: 0 !important;
+      zoom: 1.3333333333;
+      break-after: page;
+      page-break-after: always;
+    }
+
+    .page-surface:last-child {
+      break-after: auto;
+      page-break-after: auto;
+    }
+  }
 </style>
 </head>
 <body>
@@ -1168,13 +1256,24 @@
   <div id="xml-status" class="xml-status"></div>
 </div>
 
+<div class="export-controls">
+  <div class="controls-title">◆ Print / PDF Export</div>
+  <div class="export-actions">
+    <button id="ctrl-print-btn" class="ctrl-btn" type="button" onclick="printOrSavePdf()">Print / Save PDF</button>
+    <div class="export-note">
+      لطباعة الصفحات أو حفظها كملف PDF بأعلى جودة، افتح نافذة الطباعة ثم فعّل
+      <strong>Background graphics</strong> واترك <strong>Scale</strong> على <strong>100%</strong>.
+    </div>
+  </div>
+</div>
+
 
 ════════════════════════════════════════════ -->
 <div class="cover-wrapper">
   <div class="design-label">◆ Front Cover</div>
   <div class="covers-row">
 
-    <div class="cover-front">
+    <div class="cover-front page-surface">
       <div class="top-bar"></div>
 
       <!-- HEADER -->
@@ -1450,7 +1549,7 @@
   <div class="design-label">◆ Table of Contents — Separate Page</div>
 
   <div id="toc-pages-container">
-  <div class="toc-page" data-toc-page-template="true">
+  <div class="toc-page page-surface" data-toc-page-template="true">
     <div class="toc-top-bar"></div>
 
     <!-- TOC HEADER — same brand bar -->
@@ -1669,7 +1768,7 @@
 <div class="cover-wrapper">
   <div class="design-label">◆ Back Cover</div>
 
-  <div class="cover-back">
+  <div class="cover-back page-surface">
     <div class="back-top-rule"></div>
 
     <div class="back-header">
@@ -1807,6 +1906,22 @@
 </div>
 
 <script>
+  function updateDocumentTitle() {
+    const volEl = document.getElementById('ctrl-vol');
+    const issueEl = document.getElementById('ctrl-issue');
+    const monthEl = document.getElementById('ctrl-month');
+    const yearEl = document.getElementById('ctrl-year');
+    if (!volEl || !issueEl || !monthEl || !yearEl) return;
+    document.title = `AASJ Cover - Vol ${volEl.value} Issue ${issueEl.value} - ${monthEl.value} ${yearEl.value}`;
+  }
+
+  function printOrSavePdf() {
+    updateCover();
+    updateBackContent();
+    updateDocumentTitle();
+    window.print();
+  }
+
   function updateCover() {
     const vol   = document.getElementById('ctrl-vol').value;
     const issue = document.getElementById('ctrl-issue').value;
@@ -1843,6 +1958,7 @@
     });
     document.getElementById('copyright-year-back').textContent =
       `\u00a9 ${copyYear} Faculty of Agriculture (Assiut Branch), Al-Azhar University`;
+    updateDocumentTitle();
   }
 
   function updateBackContent() {
@@ -1892,6 +2008,16 @@
       if (valEl) document.getElementById('ctrl-val-' + key).value = valEl.textContent.trim();
       if (subEl) document.getElementById('ctrl-sub-' + key).value = subEl.textContent.trim();
     });
+
+    updateCover();
+    updateBackContent();
+    updateDocumentTitle();
+  });
+
+  window.addEventListener('beforeprint', function () {
+    updateCover();
+    updateBackContent();
+    updateDocumentTitle();
   });
 
   /* ══════════════════════════════════════════════════
