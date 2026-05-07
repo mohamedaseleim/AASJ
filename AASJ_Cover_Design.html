@@ -2374,6 +2374,93 @@
     return articles;
   }
 
+  const XML_ARTICLE_CONTAINER_TAGS = ['article', 'record', 'submission', 'paper', 'item', 'entry'];
+
+  function escapeRegexLiteral(text) {
+    return String(text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function cleanRawXmlText(text) {
+    return decodeHtmlEntities(text || '')
+      .replace(/\u00A0/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function extractRawTagText(blockText, tagNames) {
+    const source = String(blockText || '');
+    for (const tagName of tagNames) {
+      const escapedTag = escapeRegexLiteral(tagName);
+      const closedTagPattern = new RegExp(
+        `<(?:[\\w.-]+:)?${escapedTag}\\b[^>]*>([\\s\\S]*?)<\\/(?:[\\w.-]+:)?${escapedTag}\\s*>`,
+        'i'
+      );
+      const closedTagMatch = source.match(closedTagPattern);
+      if (closedTagMatch && closedTagMatch[1]) {
+        const cleanedClosedText = cleanRawXmlText(closedTagMatch[1]);
+        if (cleanedClosedText) return cleanedClosedText;
+      }
+
+      const openTagPattern = new RegExp(
+        `<(?:[\\w.-]+:)?${escapedTag}\\b[^>]*>([^<]*)`,
+        'i'
+      );
+      const openTagMatch = source.match(openTagPattern);
+      if (openTagMatch && openTagMatch[1]) {
+        const cleanedOpenText = cleanRawXmlText(openTagMatch[1]);
+        if (cleanedOpenText) return cleanedOpenText;
+      }
+    }
+    return '';
+  }
+
+  function parseArticlesFromRawBlocks(rawText, parser) {
+    const text = sanitizeXmlText(rawText);
+    const articles = [];
+    if (!text) return articles;
+
+    let blockTag = '';
+    let blocks = [];
+    for (const tagName of XML_ARTICLE_CONTAINER_TAGS) {
+      const escapedTag = escapeRegexLiteral(tagName);
+      const blockPattern = new RegExp(
+        `<((?:[\\w.-]+:)?${escapedTag})\\b[^>]*>[\\s\\S]*?<\\/\\1\\s*>`,
+        'gi'
+      );
+      blocks = text.match(blockPattern) || [];
+      if (blocks.length) {
+        blockTag = tagName;
+        break;
+      }
+    }
+
+    if (!blocks.length) return articles;
+
+    const isDublinCore = blockTag === 'record';
+    const titleTags = isDublinCore
+      ? ['title']
+      : ['article_title', 'article-title', 'articletitle', 'title', 'titletext'];
+
+    blocks.forEach(block => {
+      const blockDoc = parser.parseFromString(block, 'text/html');
+      const blockEl = getElsByTag(blockDoc, blockTag)[0];
+      if (!blockEl) return;
+
+      const data = extractArticleData(blockEl, isDublinCore);
+      const rawTitle = extractRawTagText(block, titleTags);
+      if (rawTitle && (!data.title || /(?:<|&lt;)/i.test(data.title))) {
+        data.title = rawTitle;
+      }
+      if (data.title) {
+        articles.push(data);
+      }
+    });
+
+    articles._rawArticleCount = blocks.length;
+    articles._rootTagName = '(raw-block-recovery)';
+    return articles;
+  }
+
   /**
    * Parse one candidate string using strict XML first, then tolerant HTML if needed.
    * @param {string} candidate
@@ -2399,6 +2486,14 @@
     // partial XML result.
     const htmlDoc = parser.parseFromString(candidate, 'text/html');
     const htmlArticles = parseArticles(htmlDoc);
+    const rawBlockArticles = parseArticlesFromRawBlocks(candidate, parser);
+    if (rawBlockArticles.length > htmlArticles.length) {
+      return {
+        doc: htmlDoc,
+        articles: rawBlockArticles,
+        usedHtmlFallback: true
+      };
+    }
     if (htmlArticles.length || htmlArticles._rawArticleCount) {
       return {
         doc: htmlDoc,
