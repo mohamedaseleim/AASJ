@@ -2393,16 +2393,10 @@
     }
 
     const xmlArticles = parseArticles(xmlDoc);
-    if (xmlArticles.length) {
-      return {
-        doc: xmlDoc,
-        articles: xmlArticles,
-        usedHtmlFallback: false
-      };
-    }
     // Even if parseArticles sees article-like nodes inside a parsererror document,
-    // they may just be diagnostic fragments of the malformed source, so still try
-    // the tolerant HTML parser before trusting that partial result.
+    // they may just be diagnostic fragments or the subset that appears before the
+    // malformed section, so try the tolerant HTML parser before trusting that
+    // partial XML result.
     const htmlDoc = parser.parseFromString(candidate, 'text/html');
     const htmlArticles = parseArticles(htmlDoc);
     if (htmlArticles.length || htmlArticles._rawArticleCount) {
@@ -2410,6 +2404,13 @@
         doc: htmlDoc,
         articles: htmlArticles,
         usedHtmlFallback: true
+      };
+    }
+    if (xmlArticles.length) {
+      return {
+        doc: xmlDoc,
+        articles: xmlArticles,
+        usedHtmlFallback: false
       };
     }
 
