@@ -2098,7 +2098,7 @@
       [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
     ];
     const numericValue = Number(num);
-    if (!Number.isFinite(numericValue) || numericValue < 1) {
+    if (!Number.isFinite(numericValue)) {
       console.warn('Invalid TOC page number received; defaulting to 1.', num);
     }
     const validatedValue = Number.isFinite(numericValue) ? Math.max(1, Math.floor(numericValue)) : 1;
@@ -2152,7 +2152,8 @@
   const TOC_START_PAGE_NUMBER = 2;
 
   function isTocOverflowing(contentsEl) {
-    return !!contentsEl && contentsEl.scrollHeight > contentsEl.clientHeight + TOC_OVERFLOW_TOLERANCE_PX;
+    return contentsEl instanceof HTMLElement &&
+      contentsEl.scrollHeight > contentsEl.clientHeight + TOC_OVERFLOW_TOLERANCE_PX;
   }
 
   function createTocPageElement(templatePage, tocPageNumber) {
