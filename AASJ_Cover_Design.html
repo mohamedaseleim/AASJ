@@ -1974,7 +1974,10 @@
       try {
         await document.fonts.ready;
       } catch (error) {
-        console.warn('Continuing print export with fallback fonts because web fonts did not finish loading.', error);
+        console.warn(
+          'Continuing print export with fallback fonts because web fonts did not finish loading (for example due to a network or CORS error), which may slightly reduce print fidelity.',
+          error
+        );
       }
     }
 
