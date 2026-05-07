@@ -2097,7 +2097,7 @@
       [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
       [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
     ];
-    let value = Math.max(1, num | 0);
+    let value = Math.max(1, Math.floor(Number(num) || 0));
     let result = '';
     numerals.forEach(([amount, symbol]) => {
       while (value >= amount) {
@@ -2141,8 +2141,10 @@
     return { label, list };
   }
 
+  const TOC_OVERFLOW_TOLERANCE_PX = 1;
+
   function isTocOverflowing(contentsEl) {
-    return !!contentsEl && contentsEl.scrollHeight > contentsEl.clientHeight + 1;
+    return !!contentsEl && contentsEl.scrollHeight > contentsEl.clientHeight + TOC_OVERFLOW_TOLERANCE_PX;
   }
 
   function createTocPageElement(templatePage, tocPageNumber) {
