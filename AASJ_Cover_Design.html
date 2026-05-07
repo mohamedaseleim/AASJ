@@ -921,7 +921,8 @@
     }
 
     .page-surface {
-      display: block !important;
+      display: flex !important;
+      flex-direction: column !important;
       box-shadow: none !important;
       margin: 0 !important;
       width: var(--page-width) !important;
@@ -946,6 +947,30 @@
         transform: none;
       }
     }
+
+    .image-area,
+    .toc-contents-area,
+    .back-body {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+    }
+
+    .cover-footer,
+    .toc-footer,
+    .back-footer {
+      margin-top: auto !important;
+    }
+
+    .back-footer {
+      padding-top: 16px !important;
+      padding-bottom: 18px !important;
+    }
+
+    .back-footer-line,
+    .back-footer-url {
+      line-height: 1.35 !important;
+    }
+
     .page-surface:last-child {
       break-after: auto;
       page-break-after: auto;
