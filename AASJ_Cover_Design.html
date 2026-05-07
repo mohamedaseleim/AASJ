@@ -2060,10 +2060,10 @@
   const ESCAPED_XML_TEXT_PATTERN = new RegExp(`&lt;\\?xml\\b|&lt;\\/?[A-Za-z_][\\w:.-]{0,${MAX_XML_TAG_CHARS_AFTER_FIRST}}`, 'i');
   // Accept DOI registrant codes of 4+ digits after the 10. prefix.
   const DOI_VALUE_SOURCE = String.raw`10\.\d{4,}/[-._;()/:A-Za-z0-9]+`;
-  const DOI_PREFIX_BOUNDARY_CHARS = String.raw`\s([{"'“‘`;
-  const DOI_SUFFIX_BOUNDARY_CHARS = String.raw`\s)\]}",'”’`;
+  const DOI_PREFIX_BOUNDARY_CHARS = String.raw`\s([{"'"“”‘’`;
+  const DOI_SUFFIX_BOUNDARY_CHARS = String.raw`\s)\]}",'"“”‘’`;
   const DOI_TEXT_PATTERNS = [
-    new RegExp(`(?:^|[${DOI_PREFIX_BOUNDARY_CHARS}])doi\\s*[:=]?\\s*(${DOI_VALUE_SOURCE})(?=$|[${DOI_SUFFIX_BOUNDARY_CHARS}])`, 'i'),
+    new RegExp(`(?:^|[${DOI_PREFIX_BOUNDARY_CHARS}])doi\\s*[:=]\\s*(${DOI_VALUE_SOURCE})(?=$|[${DOI_SUFFIX_BOUNDARY_CHARS}])`, 'i'),
     new RegExp(`(?:^|[${DOI_PREFIX_BOUNDARY_CHARS}])(${DOI_VALUE_SOURCE})(?=$|[${DOI_SUFFIX_BOUNDARY_CHARS}])`, 'i'),
     new RegExp(`https?:\\/\\/(?:dx\\.)?doi\\.org\\/(${DOI_VALUE_SOURCE})`, 'i')
   ];
