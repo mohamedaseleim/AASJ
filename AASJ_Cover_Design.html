@@ -1903,11 +1903,55 @@
 
   /* Split keyword lists exported either as repeated lines or combined
      semicolon/pipe-delimited strings used by some EKB feeds. */
-  function splitXmlListText(text) {
-    return (text || '')
-      .split(/[;\n|]+/)
+  function normalizeXmlKeywordText(text) {
+    return String(text || '')
+      .replace(/^\s*(?:keywords?|key\s*words?|index\s*terms?|subjects?|الكلمات\s+المفتاحية)\s*[:：\-–—]\s*/iu, '')
+      .trim()
+      .replace(/^[,;|،؛\s]+|[,;|،؛\s]+$/g, '')
+      .trim();
+  }
+
+  function splitXmlListText(text, options) {
+    const opts = options || {};
+    const cleaned = normalizeXmlKeywordText(text);
+    if (!cleaned) return [];
+    const separator = opts.allowComma ? /[;\n|؛,،]+/ : /[;\n|؛]+/;
+    return cleaned
+      .split(separator)
       .map(part => part.trim())
       .filter(Boolean);
+  }
+
+  function collectXmlKeywords(art) {
+    const keywords = [];
+    const addValues = (values, allowComma) => {
+      values.forEach(value => {
+        keywords.push(...splitXmlListText(value, { allowComma }));
+      });
+    };
+
+    addValues(getElsByTag(art, 'keyword').map(el => el.textContent), false);
+    addValues(getElsByTag(art, 'kwd').map(el => el.textContent), false);
+    addValues(
+      getElsByTag(art, 'subject')
+        .filter(el => {
+          const parentName = el.parentNode ? getNormalizedXmlName(el.parentNode) : '';
+          return parentName !== 'subj-group';
+        })
+        .map(el => el.textContent),
+      true
+    );
+    addValues(getElsByTag(art, 'keywords').map(el => el.textContent), true);
+    addValues(getElsByTag(art, 'subjects').map(el => el.textContent), true);
+    addValues(getElsByTag(art, 'keywordlist').map(el => el.textContent), true);
+    addValues(getElsByTag(art, 'keyword_list').map(el => el.textContent), true);
+    addValues(
+      getElsByTag(art, 'subj-group')
+        .flatMap(group => getElsByTag(group, 'subject').map(el => el.textContent)),
+      true
+    );
+
+    return Array.from(new Set(keywords.map(normalizeXmlKeywordText).filter(Boolean)));
   }
 
   const xmlTagLookupCache = new WeakMap();
@@ -2175,7 +2219,7 @@
       if (/^10\./.test(ident)) doi = ident;
       fpage = ''; lpage = '';
       type = normalizeArticleType(getDC('type'));
-      keywords = [];
+      keywords = collectXmlKeywords(art);
     } else {
       // OJS native / JATS XML
       title = getTextContent(art, [
@@ -2269,14 +2313,7 @@
       type = normalizeArticleType(typeRaw);
 
       // Keywords
-      keywords = [
-        ...getElsByTag(art, 'keyword').map(k => k.textContent.trim()),
-        ...getElsByTag(art, 'keywords').flatMap(k => splitXmlListText(k.textContent)),
-        ...splitXmlListText(getTextContent(art, ['keywordlist', 'keyword_list']))
-      ].filter(Boolean);
-      // Removes duplicate keywords while preserving insertion order when feeds expose
-      // both repeated <keyword> nodes and aggregated keyword list fields.
-      keywords = Array.from(new Set(keywords));
+      keywords = collectXmlKeywords(art);
     }
 
     // Article ID: last numeric segment of DOI
