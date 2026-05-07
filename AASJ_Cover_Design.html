@@ -2101,7 +2101,8 @@
     if (!Number.isFinite(numericValue) || numericValue < 1) {
       console.warn('Invalid TOC page number received; defaulting to 1.', num);
     }
-    let value = Number.isFinite(numericValue) ? Math.max(1, Math.floor(numericValue)) : 1;
+    const validatedValue = Number.isFinite(numericValue) ? Math.max(1, Math.floor(numericValue)) : 1;
+    let value = validatedValue;
     let result = '';
     numerals.forEach(([amount, symbol]) => {
       while (value >= amount) {
