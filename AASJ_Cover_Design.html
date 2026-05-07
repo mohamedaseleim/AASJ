@@ -2448,10 +2448,10 @@
       // _rawArticleCount is attached by parseArticles when article-like nodes were found
       // even if none produced a usable title, so preserve that diagnostic signal here.
       if (articles.length || articles._rawArticleCount) {
-        return { xmlDoc: doc, articles, usedHtmlFallback: !!usedHtmlFallback };
+        return { xmlDoc: doc, articles, usedHtmlFallback };
       }
       if (!fallbackResult) {
-        fallbackResult = { xmlDoc: doc, articles, usedHtmlFallback: !!usedHtmlFallback };
+        fallbackResult = { xmlDoc: doc, articles, usedHtmlFallback };
       }
     }
 
