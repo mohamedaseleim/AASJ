@@ -1908,7 +1908,7 @@
     'index\\s*terms?',
     'subjects?',
     // Arabic: "keywords"
-    'الكلمات\\s+المفتاحية'
+    'الكلمات\\s*المفتاحية'
   ];
   // Accept ":" plus common full-width/en-dash/em-dash variants seen in pasted feeds.
   const XML_KEYWORD_LABEL_PATTERN = new RegExp(
@@ -1918,12 +1918,13 @@
   // Include Arabic semicolon/comma (؛،) because some pasted EKB/OJS exports use them.
   const XML_KEYWORD_LIST_SEPARATOR = /[;\n|؛]+/;
   const XML_KEYWORD_LIST_SEPARATOR_WITH_COMMAS = /[;\n|؛,،]+/;
+  const XML_KEYWORD_EDGE_PUNCTUATION = /(^[,;|،؛\s]+|[,;|،؛\s]+$)/g;
 
   function normalizeXmlKeywordText(text) {
     return String(text || '')
       .replace(XML_KEYWORD_LABEL_PATTERN, '')
       .trim()
-      .replace(/^[,;|،؛\s]+|[,;|،؛\s]+$/g, '')
+      .replace(XML_KEYWORD_EDGE_PUNCTUATION, '')
       // Trim again because removing edge punctuation can expose surrounding spaces.
       .trim();
   }
@@ -2444,6 +2445,8 @@
       if (parseError) {
         lastParseError = parseError;
       }
+      // _rawArticleCount is attached by parseArticles when article-like nodes were found
+      // even if none produced a usable title, so preserve that diagnostic signal here.
       if (articles.length || articles._rawArticleCount) {
         return { xmlDoc: doc, articles, usedHtmlFallback: !!usedHtmlFallback };
       }
