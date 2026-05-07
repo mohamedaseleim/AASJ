@@ -9,6 +9,8 @@
   :root {
     /* 4/3 = 96 CSS px per inch ÷ 72 pt per inch used by the live A4 design. */
     --print-scale-factor: 1.3333333333;
+    --page-width: 595px;
+    --page-height: 842px;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -43,8 +45,8 @@
      FRONT COVER
   ═══════════════════════════════════════════════════ */
   .cover-front {
-    width: 595px;
-    height: 842px;
+    width: var(--page-width);
+    height: var(--page-height);
     background: #ffffff;
     position: relative;
     overflow: hidden;
@@ -268,8 +270,8 @@
   }
 
   .toc-page {
-    width: 595px;
-    height: 842px;
+    width: var(--page-width);
+    height: var(--page-height);
     background: #ffffff;
     box-shadow: 0 32px 80px rgba(0,0,0,0.65);
     display: flex;
@@ -485,8 +487,8 @@
      BACK COVER
   ═══════════════════════════════════════════════════ */
   .cover-back {
-    width: 595px;
-    height: 842px;
+    width: var(--page-width);
+    height: var(--page-height);
     background: #0D3B1F;
     position: relative;
     overflow: hidden;
@@ -872,6 +874,8 @@
     html, body {
       width: 210mm;
       min-width: 210mm;
+      margin: 0 !important;
+      padding: 0 !important;
       background: #fff !important;
     }
 
@@ -896,6 +900,7 @@
     #toc-pages-container {
       display: block !important;
       width: 210mm !important;
+      max-width: 210mm !important;
       margin: 0 !important;
       padding: 0 !important;
       gap: 0 !important;
@@ -905,17 +910,45 @@
     .page-surface * {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
+      color-adjust: exact !important;
+      forced-color-adjust: none !important;
+      text-rendering: geometricPrecision;
+    }
+
+    .page-surface svg,
+    .page-surface svg * {
+      shape-rendering: geometricPrecision;
+      text-rendering: geometricPrecision;
     }
 
     .page-surface {
+      display: block !important;
       box-shadow: none !important;
       margin: 0 !important;
+      width: var(--page-width) !important;
+      height: var(--page-height) !important;
+      overflow: hidden !important;
+      break-inside: avoid-page;
+      page-break-inside: avoid;
+      image-rendering: high-quality;
+      image-rendering: -webkit-optimize-contrast;
       /* 595×842 matches A4 at 72 points per inch; browsers print at 96 CSS px/in, so 4/3
-         keeps the live design proportional when exporting to full-size A4. */
-      transform: scale(var(--print-scale-factor));
-      transform-origin: top left;
+          keeps the live design proportional when exporting to full-size A4. */
       break-after: page;
       page-break-after: always;
+    }
+
+    @supports (zoom: 1) {
+      .page-surface {
+        zoom: var(--print-scale-factor);
+      }
+    }
+
+    @supports not (zoom: 1) {
+      .page-surface {
+        transform: scale(var(--print-scale-factor));
+        transform-origin: top left;
+      }
     }
 
     .page-surface:last-child {
@@ -1941,8 +1974,23 @@
     updateBackContent();
   }
 
-  function printOrSavePdf() {
+  async function waitForPrintLayout() {
+    if (document.fonts && document.fonts.ready) {
+      try {
+        await document.fonts.ready;
+      } catch (_) {
+        // Continue to print even if the browser cannot report font readiness.
+      }
+    }
+
+    await new Promise(resolve => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+  }
+
+  async function printOrSavePdf() {
     prepareForPrint();
+    await waitForPrintLayout();
     window.print();
   }
 
