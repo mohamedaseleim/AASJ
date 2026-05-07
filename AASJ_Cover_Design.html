@@ -2239,7 +2239,9 @@
   }
 
   function sanitizeTitleMarkup(markup) {
-    const htmlDoc = new DOMParser().parseFromString('<body>' + (markup || '') + '</body>', 'text/html');
+    const htmlDoc = new DOMParser().parseFromString('', 'text/html');
+    const container = htmlDoc.createElement('div');
+    container.innerHTML = markup || '';
     const TEXT_NODE = 3;
     const ELEMENT_NODE = 1;
 
@@ -2256,7 +2258,7 @@
       return '<' + tagName + '>' + innerHtml + '</' + tagName + '>';
     };
 
-    return Array.from(htmlDoc.body.childNodes).map(sanitizeNode).join('').trim();
+    return Array.from(container.childNodes).map(sanitizeNode).join('').trim();
   }
 
   function getFormattedTextContent(el, tagNames) {
@@ -2800,9 +2802,24 @@
 
   function containsUnsupportedTitleMarkup(title) {
     if (!/(?:<|&lt;)/i.test(title || '')) return false;
-    const sanitizedTitle = sanitizeTitleMarkup(title);
-    const normalizedTitle = (title || '').replace(/\s+/g, ' ').trim();
-    return sanitizedTitle !== normalizedTitle;
+    const htmlDoc = new DOMParser().parseFromString('', 'text/html');
+    const container = htmlDoc.createElement('div');
+    container.innerHTML = title || '';
+    let hasUnsupportedMarkup = false;
+
+    const visitNode = node => {
+      if (!node || hasUnsupportedMarkup) return;
+      if (node.nodeType !== 1) return;
+      const tagName = (node.localName || node.nodeName || '').toLowerCase();
+      if (!ALLOWED_TITLE_INLINE_TAGS.has(tagName) || (node.attributes && node.attributes.length)) {
+        hasUnsupportedMarkup = true;
+        return;
+      }
+      Array.from(node.childNodes).forEach(visitNode);
+    };
+
+    Array.from(container.childNodes).forEach(visitNode);
+    return hasUnsupportedMarkup;
   }
 
   function parseArticlesFromRawBlocks(rawText, parser) {
