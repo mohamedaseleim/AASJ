@@ -910,7 +910,7 @@
     .page-surface {
       box-shadow: none !important;
       margin: 0 !important;
-      /* 595×842 matches A4 at 72 DPI; browsers print at 96 CSS px/in, so 4/3
+      /* 595×842 matches A4 at 72 points per inch; browsers print at 96 CSS px/in, so 4/3
          keeps the live design proportional when exporting to full-size A4. */
       transform: scale(var(--print-scale-factor));
       transform-origin: top left;
@@ -1929,7 +1929,7 @@
         !monthEl && 'ctrl-month',
         !yearEl && 'ctrl-year'
       ].filter(Boolean);
-      console.warn('Missing cover control elements for PDF title. Missing elements:', missingIds.join(', '));
+      console.warn('Missing cover control element IDs for PDF title:', missingIds.join(', '));
       return;
     }
     document.title = `AASJ Cover - Vol ${volEl.value} Issue ${issueEl.value} - ${monthEl.value} ${yearEl.value}`;
