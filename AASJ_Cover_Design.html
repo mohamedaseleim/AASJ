@@ -1903,7 +1903,7 @@
 
   /* Split keyword lists exported either as repeated lines or combined
      semicolon/pipe-delimited strings used by some EKB feeds. */
-  const XML_KEYWORD_LABELS = [
+  const XML_KEYWORD_LABEL_PATTERNS = [
     // Stored as strings because they are joined into one RegExp pattern below.
     'key\\s*words?',
     'index\\s*terms?',
@@ -1913,7 +1913,7 @@
   ];
   // Accept ":" plus common full-width/en-dash/em-dash variants seen in pasted feeds.
   const XML_KEYWORD_LABEL_PATTERN = new RegExp(
-    '^\\s*(?:' + XML_KEYWORD_LABELS.join('|') + ')\\s*[:：\\-–—]\\s*',
+    '^\\s*(?:' + XML_KEYWORD_LABEL_PATTERNS.join('|') + ')\\s*[:：\\-–—]\\s*',
     'iu'
   );
   // Include Arabic semicolon/comma (؛،) because some pasted EKB/OJS exports use them.
@@ -2374,6 +2374,9 @@
     return articles;
   }
 
+  /* Parse one XML/HTML candidate using strict XML first, then tolerant HTML.
+     Returns { doc, articles, usedHtmlFallback, parseError? }. parseError is only
+     populated when strict XML fails and the HTML fallback still yields no usable data. */
   function tryParseArticleCandidate(candidate, parser, maxParseErrLen) {
     const xmlDoc = parser.parseFromString(candidate, 'application/xml');
     const parseErr = getXmlParseError(xmlDoc);
@@ -2386,6 +2389,9 @@
     }
 
     const xmlArticles = parseArticles(xmlDoc);
+    // Even if parseArticles sees article-like nodes inside a parsererror document,
+    // they may just be diagnostic fragments of the malformed source, so still try
+    // the tolerant HTML parser before trusting that partial result.
     const htmlDoc = parser.parseFromString(candidate, 'text/html');
     const htmlArticles = parseArticles(htmlDoc);
     if (htmlArticles.length || htmlArticles._rawArticleCount) {
