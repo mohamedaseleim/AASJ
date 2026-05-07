@@ -9,6 +9,8 @@
   :root {
     /* 4/3 = 96 CSS px per inch ÷ 72 pt per inch used by the live A4 design. */
     --print-scale-factor: 1.3333333333;
+    --page-width: 595px;
+    --page-height: 842px;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -43,8 +45,8 @@
      FRONT COVER
   ═══════════════════════════════════════════════════ */
   .cover-front {
-    width: 595px;
-    height: 842px;
+    width: var(--page-width);
+    height: var(--page-height);
     background: #ffffff;
     position: relative;
     overflow: hidden;
@@ -268,8 +270,8 @@
   }
 
   .toc-page {
-    width: 595px;
-    height: 842px;
+    width: var(--page-width);
+    height: var(--page-height);
     background: #ffffff;
     box-shadow: 0 32px 80px rgba(0,0,0,0.65);
     display: flex;
@@ -485,8 +487,8 @@
      BACK COVER
   ═══════════════════════════════════════════════════ */
   .cover-back {
-    width: 595px;
-    height: 842px;
+    width: var(--page-width);
+    height: var(--page-height);
     background: #0D3B1F;
     position: relative;
     overflow: hidden;
@@ -872,6 +874,8 @@
     html, body {
       width: 210mm;
       min-width: 210mm;
+      margin: 0 !important;
+      padding: 0 !important;
       background: #fff !important;
     }
 
@@ -896,6 +900,7 @@
     #toc-pages-container {
       display: block !important;
       width: 210mm !important;
+      max-width: 210mm !important;
       margin: 0 !important;
       padding: 0 !important;
       gap: 0 !important;
@@ -905,19 +910,42 @@
     .page-surface * {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
+      color-adjust: exact !important;
+      forced-color-adjust: none !important;
+    }
+
+    .page-surface svg,
+    .page-surface svg * {
+      shape-rendering: geometricPrecision;
+      text-rendering: geometricPrecision;
     }
 
     .page-surface {
+      display: block !important;
       box-shadow: none !important;
       margin: 0 !important;
+      width: var(--page-width) !important;
+      height: var(--page-height) !important;
+      overflow: hidden !important;
+      break-inside: avoid-page;
+      page-break-inside: avoid;
+      image-rendering: -webkit-optimize-contrast;
+      text-rendering: optimizeLegibility;
       /* 595×842 matches A4 at 72 points per inch; browsers print at 96 CSS px/in, so 4/3
-         keeps the live design proportional when exporting to full-size A4. */
+          keeps the live design proportional when exporting to full-size A4. */
       transform: scale(var(--print-scale-factor));
       transform-origin: top left;
       break-after: page;
       page-break-after: always;
     }
 
+    @supports (zoom: 1) {
+      .page-surface {
+        /* Chromium prints more reliably with zoom because the scaled page still participates in layout. */
+        zoom: var(--print-scale-factor);
+        transform: none;
+      }
+    }
     .page-surface:last-child {
       break-after: auto;
       page-break-after: auto;
@@ -1277,8 +1305,8 @@
     </div>
   </div>
 </div>
-
-
+<!-- ════════════════════════════════════════════
+     BLOCK 1 : FRONT COVER
 ════════════════════════════════════════════ -->
 <div class="cover-wrapper">
   <div class="design-label">◆ Front Cover</div>
@@ -1941,8 +1969,27 @@
     updateBackContent();
   }
 
-  function printOrSavePdf() {
+  async function waitForPrintLayout() {
+    if (document.fonts) {
+      try {
+        await document.fonts.ready;
+      } catch (error) {
+        console.warn(
+          'Continuing print export with fallback fonts because web fonts did not finish loading (for example due to a network or CORS error), which may slightly reduce print fidelity.',
+          error
+        );
+      }
+    }
+
+    await new Promise(resolve => {
+      // Wait two paint cycles so the latest cover/TOC updates and font metrics settle before printing.
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+  }
+
+  async function printOrSavePdf() {
     prepareForPrint();
+    await waitForPrintLayout();
     window.print();
   }
 
