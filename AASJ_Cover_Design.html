@@ -1903,9 +1903,24 @@
 
   /* Split keyword lists exported either as repeated lines or combined
      semicolon/pipe-delimited strings used by some EKB feeds. */
+  const XML_KEYWORD_LABELS = [
+    'keywords?',
+    'key\\s*words?',
+    'index\\s*terms?',
+    'subjects?',
+    'الكلمات\\s+المفتاحية'
+  ];
+  const XML_KEYWORD_LABEL_PATTERN = new RegExp(
+    '^\\s*(?:' + XML_KEYWORD_LABELS.join('|') + ')\\s*[:：\\-–—]\\s*',
+    'iu'
+  );
+  // Include Arabic semicolon/comma (؛،) because some pasted EKB/OJS exports use them.
+  const XML_KEYWORD_LIST_SEPARATOR = /[;\n|؛]+/;
+  const XML_KEYWORD_LIST_SEPARATOR_WITH_COMMAS = /[;\n|؛,،]+/;
+
   function normalizeXmlKeywordText(text) {
     return String(text || '')
-      .replace(/^\s*(?:keywords?|key\s*words?|index\s*terms?|subjects?|الكلمات\s+المفتاحية)\s*[:：\-–—]\s*/iu, '')
+      .replace(XML_KEYWORD_LABEL_PATTERN, '')
       .trim()
       .replace(/^[,;|،؛\s]+|[,;|،؛\s]+$/g, '')
       .trim();
@@ -1915,7 +1930,7 @@
     const opts = options || {};
     const cleaned = normalizeXmlKeywordText(text);
     if (!cleaned) return [];
-    const separator = opts.allowComma ? /[;\n|؛,،]+/ : /[;\n|؛]+/;
+    const separator = opts.allowComma ? XML_KEYWORD_LIST_SEPARATOR_WITH_COMMAS : XML_KEYWORD_LIST_SEPARATOR;
     return cleaned
       .split(separator)
       .map(part => part.trim())
@@ -1932,24 +1947,11 @@
 
     addValues(getElsByTag(art, 'keyword').map(el => el.textContent), false);
     addValues(getElsByTag(art, 'kwd').map(el => el.textContent), false);
-    addValues(
-      getElsByTag(art, 'subject')
-        .filter(el => {
-          const parentName = el.parentNode ? getNormalizedXmlName(el.parentNode) : '';
-          return parentName !== 'subj-group';
-        })
-        .map(el => el.textContent),
-      true
-    );
+    addValues(getElsByTag(art, 'subject').map(el => el.textContent), true);
     addValues(getElsByTag(art, 'keywords').map(el => el.textContent), true);
     addValues(getElsByTag(art, 'subjects').map(el => el.textContent), true);
     addValues(getElsByTag(art, 'keywordlist').map(el => el.textContent), true);
     addValues(getElsByTag(art, 'keyword_list').map(el => el.textContent), true);
-    addValues(
-      getElsByTag(art, 'subj-group')
-        .flatMap(group => getElsByTag(group, 'subject').map(el => el.textContent)),
-      true
-    );
 
     return Array.from(new Set(keywords.map(normalizeXmlKeywordText).filter(Boolean)));
   }
