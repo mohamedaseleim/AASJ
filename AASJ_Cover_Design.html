@@ -6,6 +6,10 @@
 <title>AASJ Cover – Redesigned</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --print-scale-factor: 1.3333333333;
+  }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
@@ -842,6 +846,9 @@
     max-width: 760px;
   }
   .export-note strong { color: #E8B84B; }
+  .export-note [lang="ar"] {
+    font-family: 'Source Sans 3', 'Segoe UI', Tahoma, Arial, sans-serif;
+  }
   .xml-status {
     font-size: 11px;
     color: rgba(255,255,255,0.6);
@@ -904,7 +911,7 @@
       margin: 0 !important;
       /* 595×842 matches A4 at 72 DPI; browsers print at 96 CSS px/in, so 4/3
          keeps the live design proportional when exporting to full-size A4. */
-      transform: scale(1.3333333333);
+      transform: scale(var(--print-scale-factor));
       transform-origin: top left;
       break-after: page;
       page-break-after: always;
@@ -1921,7 +1928,7 @@
         !monthEl && 'ctrl-month',
         !yearEl && 'ctrl-year'
       ].filter(Boolean);
-      console.warn('Print/PDF export title update skipped because cover controls were not found:', missingIds.join(', '));
+      console.warn('Print/PDF export title update skipped because cover controls were not found. Printing still works, but the exported PDF filename may be less descriptive:', missingIds.join(', '));
       return;
     }
     document.title = `AASJ Cover - Vol ${volEl.value} Issue ${issueEl.value} - ${monthEl.value} ${yearEl.value}`;
