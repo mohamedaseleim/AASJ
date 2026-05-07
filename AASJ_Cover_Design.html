@@ -1495,9 +1495,9 @@
           <div class="toc-journal-sub">Faculty of Agriculture · Al-Azhar University · Assiut, Egypt</div>
         </div>
       </div>
-      <div class="toc-vol-badge" id="toc-vol-badge">
-        <span id="toc-vol-main" class="toc-vol-main">Vol. 9 · No. 1</span>
-        <span id="toc-vol-date" class="toc-vol-date">April 2026</span>
+      <div class="toc-vol-badge">
+        <span class="toc-vol-main">Vol. 9 · No. 1</span>
+        <span class="toc-vol-date">April 2026</span>
       </div>
     </div>
 
@@ -1513,7 +1513,7 @@
     </div>
 
     <!-- ── SECTION: RESEARCH ARTICLES ── -->
-    <div id="toc-contents-area" class="toc-contents-area">
+    <div class="toc-contents-area">
     <div class="toc-section-label">Research Articles</div>
 
     <div class="toc-articles">
@@ -1652,7 +1652,7 @@
     <!-- TOC FOOTER -->
     <div class="toc-footer">
       <div>
-        <div id="copyright-year-toc" class="toc-footer-text toc-copyright-year">© 2026 Faculty of Agriculture (Assiut Branch), Al-Azhar University, Egypt</div>
+        <div class="toc-footer-text toc-copyright-year">© 2026 Faculty of Agriculture (Assiut Branch), Al-Azhar University, Egypt</div>
         <div class="toc-footer-url">http://aasj.journals.ekb.eg</div>
       </div>
       <div class="toc-page-num">ii</div>
@@ -2097,7 +2097,8 @@
       [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
       [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
     ];
-    let value = Math.max(1, Math.floor(Number(num) || 0));
+    const numericValue = Number(num);
+    let value = Number.isFinite(numericValue) ? Math.max(1, Math.floor(numericValue)) : 1;
     let result = '';
     numerals.forEach(([amount, symbol]) => {
       while (value >= amount) {
@@ -2151,7 +2152,6 @@
     const page = templatePage.cloneNode(true);
     page.removeAttribute('id');
     page.removeAttribute('data-toc-page-template');
-    page.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
 
     const contents = page.querySelector('.toc-contents-area');
     if (contents) contents.innerHTML = '';
