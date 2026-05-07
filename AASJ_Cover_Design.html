@@ -1934,7 +1934,7 @@
     const opts = options || {};
     const cleaned = normalizeXmlKeywordText(text);
     if (!cleaned) return [];
-    const separator = opts.includeCommaDelimiters ? XML_KEYWORD_LIST_SEPARATOR_WITH_COMMAS : XML_KEYWORD_LIST_SEPARATOR;
+    const separator = opts.useCommaDelimiters ? XML_KEYWORD_LIST_SEPARATOR_WITH_COMMAS : XML_KEYWORD_LIST_SEPARATOR;
     return cleaned
       .split(separator)
       .map(part => part.trim())
@@ -1943,9 +1943,9 @@
 
   function collectXmlKeywords(art) {
     const keywords = [];
-    const addKeywordsFromValues = (values, includeCommaDelimiters) => {
+    const addKeywordsFromValues = (values, useCommaDelimiters) => {
       values.forEach(value => {
-        keywords.push(...splitXmlListText(value, { includeCommaDelimiters }));
+        keywords.push(...splitXmlListText(value, { useCommaDelimiters }));
       });
     };
 
@@ -2374,9 +2374,13 @@
     return articles;
   }
 
-  /* Parse one XML/HTML candidate using strict XML first, then tolerant HTML.
-     Returns { doc, articles, usedHtmlFallback, parseError? }. parseError is only
-     populated when strict XML fails and the HTML fallback still yields no usable data. */
+  /**
+   * Parse one candidate string using strict XML first, then tolerant HTML if needed.
+   * @param {string} candidate
+   * @param {DOMParser} parser
+   * @param {number} maxParseErrLen
+   * @returns {{doc: Document, articles: Array, usedHtmlFallback: boolean, parseError?: Error}}
+   */
   function tryParseArticleCandidate(candidate, parser, maxParseErrLen) {
     const xmlDoc = parser.parseFromString(candidate, 'application/xml');
     const parseErr = getXmlParseError(xmlDoc);
@@ -2389,6 +2393,13 @@
     }
 
     const xmlArticles = parseArticles(xmlDoc);
+    if (xmlArticles.length) {
+      return {
+        doc: xmlDoc,
+        articles: xmlArticles,
+        usedHtmlFallback: false
+      };
+    }
     // Even if parseArticles sees article-like nodes inside a parsererror document,
     // they may just be diagnostic fragments of the malformed source, so still try
     // the tolerant HTML parser before trusting that partial result.
