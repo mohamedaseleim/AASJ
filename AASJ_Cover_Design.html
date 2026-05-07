@@ -373,7 +373,7 @@
   }
 
   /* Content column */
-  .art-content { flex: 1; padding-right: 10px; }
+  .art-content { flex: 1; min-width: 0; padding-right: 10px; }
 
   .art-type-tag {
     display: inline-block;
@@ -410,7 +410,7 @@
 
   /* Pages + DOI column */
   .art-meta {
-    width: 78px; flex-shrink: 0;
+    width: 120px; flex-shrink: 0;
     display: flex; flex-direction: column;
     align-items: flex-end; padding-top: 2px; gap: 5px;
   }
@@ -422,7 +422,9 @@
   .art-doi {
     font-size: 7.5px; color: #bbb;
     text-align: right; line-height: 1.4;
-    word-break: break-all;
+    white-space: nowrap;
+    word-break: normal;
+    overflow-wrap: normal;
   }
 
   /* TOC Footer — same brand footer */
