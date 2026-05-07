@@ -1903,11 +1903,61 @@
 
   /* Split keyword lists exported either as repeated lines or combined
      semicolon/pipe-delimited strings used by some EKB feeds. */
-  function splitXmlListText(text) {
+  const XML_KEYWORD_LABEL_PATTERNS = [
+    // Stored as strings because they are joined into one RegExp pattern below.
+    'key\\s*words?',
+    'index\\s*terms?',
+    'subjects?',
+    // Arabic: "keywords"
+    'الكلمات\\s*المفتاحية'
+  ];
+  // Accept ":" plus common full-width/en-dash/em-dash variants seen in pasted feeds.
+  const XML_KEYWORD_LABEL_PATTERN = new RegExp(
+    '^\\s*(?:' + XML_KEYWORD_LABEL_PATTERNS.join('|') + ')\\s*[:：\\-–—]\\s*',
+    'iu'
+  );
+  // Include Arabic semicolon/comma (؛،) because some pasted EKB/OJS exports use them.
+  const XML_KEYWORD_LIST_SEPARATOR = /[;\n|؛]+/;
+  const XML_KEYWORD_LIST_SEPARATOR_WITH_COMMAS = /[;\n|؛,،]+/;
+  const XML_KEYWORD_EDGE_PUNCTUATION = /(^[,;|،؛\s]+|[,;|،؛\s]+$)/g;
+
+  function normalizeXmlKeywordText(text) {
     return (text || '')
-      .split(/[;\n|]+/)
+      .replace(XML_KEYWORD_LABEL_PATTERN, '')
+      .trim()
+      .replace(XML_KEYWORD_EDGE_PUNCTUATION, '')
+      // Trim again because removing edge punctuation can expose surrounding spaces.
+      .trim();
+  }
+
+  function splitXmlListText(text, options) {
+    const opts = options || {};
+    const cleaned = normalizeXmlKeywordText(text);
+    if (!cleaned) return [];
+    const separator = opts.useCommaDelimiters ? XML_KEYWORD_LIST_SEPARATOR_WITH_COMMAS : XML_KEYWORD_LIST_SEPARATOR;
+    return cleaned
+      .split(separator)
       .map(part => part.trim())
       .filter(Boolean);
+  }
+
+  function collectXmlKeywords(art) {
+    const keywords = [];
+    const processAndAddKeywords = (values, useCommaDelimiters) => {
+      values.forEach(value => {
+        keywords.push(...splitXmlListText(value, { useCommaDelimiters }));
+      });
+    };
+
+    processAndAddKeywords(getElsByTag(art, 'keyword').map(el => el.textContent), false);
+    processAndAddKeywords(getElsByTag(art, 'kwd').map(el => el.textContent), false);
+    processAndAddKeywords(getElsByTag(art, 'subject').map(el => el.textContent), true);
+    processAndAddKeywords(getElsByTag(art, 'keywords').map(el => el.textContent), true);
+    processAndAddKeywords(getElsByTag(art, 'subjects').map(el => el.textContent), true);
+    processAndAddKeywords(getElsByTag(art, 'keywordlist').map(el => el.textContent), true);
+    processAndAddKeywords(getElsByTag(art, 'keyword_list').map(el => el.textContent), true);
+
+    return Array.from(new Set(keywords.map(normalizeXmlKeywordText).filter(Boolean)));
   }
 
   const xmlTagLookupCache = new WeakMap();
@@ -2175,7 +2225,7 @@
       if (/^10\./.test(ident)) doi = ident;
       fpage = ''; lpage = '';
       type = normalizeArticleType(getDC('type'));
-      keywords = [];
+      keywords = collectXmlKeywords(art);
     } else {
       // OJS native / JATS XML
       title = getTextContent(art, [
@@ -2269,14 +2319,7 @@
       type = normalizeArticleType(typeRaw);
 
       // Keywords
-      keywords = [
-        ...getElsByTag(art, 'keyword').map(k => k.textContent.trim()),
-        ...getElsByTag(art, 'keywords').flatMap(k => splitXmlListText(k.textContent)),
-        ...splitXmlListText(getTextContent(art, ['keywordlist', 'keyword_list']))
-      ].filter(Boolean);
-      // Removes duplicate keywords while preserving insertion order when feeds expose
-      // both repeated <keyword> nodes and aggregated keyword list fields.
-      keywords = Array.from(new Set(keywords));
+      keywords = collectXmlKeywords(art);
     }
 
     // Article ID: last numeric segment of DOI
@@ -2331,6 +2374,56 @@
     return articles;
   }
 
+  /**
+   * Parse one candidate string using strict XML first, then tolerant HTML if needed.
+   * @param {string} candidate
+   * @param {DOMParser} parser
+   * @param {number} maxParseErrLen
+   * @returns {{doc: Document, articles: Array, usedHtmlFallback: boolean, parseError?: Error}}
+   */
+  function tryParseArticleCandidate(candidate, parser, maxParseErrLen) {
+    const xmlDoc = parser.parseFromString(candidate, 'application/xml');
+    const parseErr = getXmlParseError(xmlDoc);
+    if (!parseErr) {
+      return {
+        doc: xmlDoc,
+        articles: parseArticles(xmlDoc),
+        usedHtmlFallback: false
+      };
+    }
+
+    const xmlArticles = parseArticles(xmlDoc);
+    if (xmlArticles.length) {
+      return {
+        doc: xmlDoc,
+        articles: xmlArticles,
+        usedHtmlFallback: false
+      };
+    }
+    // Even if parseArticles sees article-like nodes inside a parsererror document,
+    // they may just be diagnostic fragments of the malformed source, so still try
+    // the tolerant HTML parser before trusting that partial result.
+    const htmlDoc = parser.parseFromString(candidate, 'text/html');
+    const htmlArticles = parseArticles(htmlDoc);
+    if (htmlArticles.length || htmlArticles._rawArticleCount) {
+      return {
+        doc: htmlDoc,
+        articles: htmlArticles,
+        usedHtmlFallback: true
+      };
+    }
+
+    return {
+      doc: xmlDoc,
+      articles: xmlArticles,
+      usedHtmlFallback: false,
+      parseError: new Error(
+        'Unable to parse article data: strict XML parsing failed with "' + formatXmlParseErrorText(parseErr, maxParseErrLen) + '". ' +
+        'HTML fallback also did not produce recognizable article data.'
+      )
+    };
+  }
+
   function parseXmlInput(rawText, maxParseErrLen) {
     const text = sanitizeXmlText(rawText);
     const parser = new DOMParser();
@@ -2368,28 +2461,27 @@
     }
 
     for (const candidate of candidates) {
-      const xmlDoc = parser.parseFromString(candidate, 'application/xml');
-      const parseErr = getXmlParseError(xmlDoc);
-      if (parseErr) {
-        lastParseError = new Error('XML parse error: ' + formatXmlParseErrorText(parseErr, maxParseErrLen));
-        continue;
+      const result = tryParseArticleCandidate(candidate, parser, maxParseErrLen);
+      const { doc, articles, parseError, usedHtmlFallback } = result;
+      if (parseError) {
+        lastParseError = parseError;
       }
-
-      const articles = parseArticles(xmlDoc);
+      // _rawArticleCount is attached by parseArticles when article-like nodes were found
+      // even if none produced a usable title, so preserve that diagnostic signal here.
       if (articles.length || articles._rawArticleCount) {
-        return { xmlDoc, articles };
+        return { xmlDoc: doc, articles, usedHtmlFallback };
       }
       if (!fallbackResult) {
-        fallbackResult = { xmlDoc, articles };
+        fallbackResult = { xmlDoc: doc, articles, usedHtmlFallback };
       }
     }
 
     if (fallbackResult) return fallbackResult;
     if (lastParseError) throw lastParseError;
     throw new Error(
-      'XML parse error: unable to detect valid XML content after trying ' +
+      'Parse error: unable to detect valid XML or fault-tolerant HTML content after trying ' +
       candidates.length + ' candidate(s) from ' + (hasHtmlDocumentStructure ? 'HTML-wrapped' : 'raw') + ' input. ' +
-      'Ensure the pasted content contains complete XML markup with matching opening and closing tags.'
+      'Ensure the pasted content contains recognizable article tags or complete XML markup with matching opening and closing tags.'
     );
   }
 
@@ -2515,14 +2607,21 @@
         );
       }
 
-      const { xmlDoc, articles } = parseXmlInput(xmlText, MAX_PARSE_ERR_LEN);
+      const { xmlDoc, articles, usedHtmlFallback } = parseXmlInput(xmlText, MAX_PARSE_ERR_LEN);
       if (!articles.length) {
         const diag = buildNullArticlesDiag(articles, xmlDoc);
         throw new Error(diag);
       }
 
       renderTocArticles(articles);
-      showXmlStatus('✓ تم تحميل ' + articles.length + ' بحث/بحوث بنجاح.  (' + articles.length + ' article(s) loaded.)', 'success');
+      showXmlStatus(
+        '✓ تم تحميل ' + articles.length + ' بحث/بحوث بنجاح' +
+        (usedHtmlFallback ? ' مع تصحيح تلقائي للأخطاء الهيكلية في XML' : '') +
+        '. (' + articles.length + ' article(s) loaded' +
+        (usedHtmlFallback ? ' via fault-tolerant HTML fallback' : '') +
+        '.)',
+        'success'
+      );
     } catch (err) {
       showXmlStatus('✗ خطأ: ' + err.message, 'error');
     } finally {
@@ -2544,14 +2643,21 @@
 
     if (btn) btn.disabled = true;
     try {
-      const { xmlDoc, articles } = parseXmlInput(xmlText, MAX_PARSE_ERR_LEN);
+      const { xmlDoc, articles, usedHtmlFallback } = parseXmlInput(xmlText, MAX_PARSE_ERR_LEN);
       if (!articles.length) {
         const diag = buildNullArticlesDiag(articles, xmlDoc);
         throw new Error(diag);
       }
 
       renderTocArticles(articles);
-      showXmlStatus('✓ تم تحميل ' + articles.length + ' بحث/بحوث بنجاح.  (' + articles.length + ' article(s) loaded.)', 'success');
+      showXmlStatus(
+        '✓ تم تحميل ' + articles.length + ' بحث/بحوث بنجاح' +
+        (usedHtmlFallback ? ' مع تصحيح تلقائي للأخطاء الهيكلية في XML' : '') +
+        '. (' + articles.length + ' article(s) loaded' +
+        (usedHtmlFallback ? ' via fault-tolerant HTML fallback' : '') +
+        '.)',
+        'success'
+      );
     } catch (err) {
       showXmlStatus('✗ خطأ: ' + err.message, 'error');
     } finally {
