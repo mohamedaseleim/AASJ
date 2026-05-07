@@ -1978,12 +1978,13 @@
     if (document.fonts) {
       try {
         await document.fonts.ready;
-      } catch (fontLoadingError) {
+      } catch {
         // Continue to print if the Fonts API rejects while loading remote web fonts.
       }
     }
 
     await new Promise(resolve => {
+      // Wait two paint cycles so the latest cover/TOC updates and font metrics settle before printing.
       requestAnimationFrame(() => requestAnimationFrame(resolve));
     });
   }
