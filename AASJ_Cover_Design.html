@@ -1904,7 +1904,6 @@
   /* Split keyword lists exported either as repeated lines or combined
      semicolon/pipe-delimited strings used by some EKB feeds. */
   const XML_KEYWORD_LABELS = [
-    'keywords?',
     'key\\s*words?',
     'index\\s*terms?',
     'subjects?',
@@ -1930,7 +1929,7 @@
     const opts = options || {};
     const cleaned = normalizeXmlKeywordText(text);
     if (!cleaned) return [];
-    const separator = opts.allowComma ? XML_KEYWORD_LIST_SEPARATOR_WITH_COMMAS : XML_KEYWORD_LIST_SEPARATOR;
+    const separator = opts.includeCommaDelimiters ? XML_KEYWORD_LIST_SEPARATOR_WITH_COMMAS : XML_KEYWORD_LIST_SEPARATOR;
     return cleaned
       .split(separator)
       .map(part => part.trim())
@@ -1939,9 +1938,9 @@
 
   function collectXmlKeywords(art) {
     const keywords = [];
-    const addKeywordsFromValues = (values, allowComma) => {
+    const addKeywordsFromValues = (values, includeCommaDelimiters) => {
       values.forEach(value => {
-        keywords.push(...splitXmlListText(value, { allowComma }));
+        keywords.push(...splitXmlListText(value, { includeCommaDelimiters }));
       });
     };
 
