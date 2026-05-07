@@ -256,16 +256,26 @@
   /* ═══════════════════════════════════════════════════
      TOC PAGE  (independent page after front cover)
   ═══════════════════════════════════════════════════ */
+  #toc-pages-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
   .toc-page {
     width: 595px;
-    min-height: 842px;
+    height: 842px;
     background: #ffffff;
     box-shadow: 0 32px 80px rgba(0,0,0,0.65);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     position: relative;
+    flex-shrink: 0;
+    break-after: page;
+    page-break-after: always;
   }
+  .toc-page:last-child { break-after: auto; page-break-after: auto; }
 
   /* Top identity bar — same as front cover for brand consistency */
   .toc-top-bar {
@@ -300,7 +310,7 @@
     white-space: nowrap;
   }
   .toc-vol-badge span { display: block; font-size: 9px; color: rgba(255,255,255,0.45); font-weight: 400; margin-top: 2px; letter-spacing: 0.5px; }
-  .toc-vol-badge #toc-vol-main { display: block; font-size: 10px; color: #C9941A; font-weight: 700; letter-spacing: 1.5px; margin-top: 0; }
+  .toc-vol-badge .toc-vol-main { display: block; font-size: 10px; color: #C9941A; font-weight: 700; letter-spacing: 1.5px; margin-top: 0; }
 
   .toc-gold-div {
     height: 3px;
@@ -428,8 +438,14 @@
   }
 
   /* TOC Footer — same brand footer */
+  .toc-contents-area {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding-bottom: 10px;
+  }
+
   .toc-footer {
-    margin-top: auto;
     background: #0D3B1F;
     padding: 10px 36px;
     display: flex; align-items: center; justify-content: space-between;
@@ -1433,7 +1449,8 @@
 <div class="cover-wrapper">
   <div class="design-label">◆ Table of Contents — Separate Page</div>
 
-  <div class="toc-page">
+  <div id="toc-pages-container">
+  <div class="toc-page" data-toc-page-template="true">
     <div class="toc-top-bar"></div>
 
     <!-- TOC HEADER — same brand bar -->
@@ -1478,9 +1495,9 @@
           <div class="toc-journal-sub">Faculty of Agriculture · Al-Azhar University · Assiut, Egypt</div>
         </div>
       </div>
-      <div class="toc-vol-badge" id="toc-vol-badge">
-        <span id="toc-vol-main">Vol. 9 · No. 1</span>
-        <span id="toc-vol-date">April 2026</span>
+      <div class="toc-vol-badge">
+        <span class="toc-vol-main">Vol. 9 · No. 1</span>
+        <span class="toc-vol-date">April 2026</span>
       </div>
     </div>
 
@@ -1496,7 +1513,7 @@
     </div>
 
     <!-- ── SECTION: RESEARCH ARTICLES ── -->
-    <div id="toc-contents-area">
+    <div class="toc-contents-area">
     <div class="toc-section-label">Research Articles</div>
 
     <div class="toc-articles">
@@ -1635,13 +1652,14 @@
     <!-- TOC FOOTER -->
     <div class="toc-footer">
       <div>
-        <div id="copyright-year-toc" class="toc-footer-text">© 2026 Faculty of Agriculture (Assiut Branch), Al-Azhar University, Egypt</div>
+        <div class="toc-footer-text toc-copyright-year">© 2026 Faculty of Agriculture (Assiut Branch), Al-Azhar University, Egypt</div>
         <div class="toc-footer-url">http://aasj.journals.ekb.eg</div>
       </div>
       <div class="toc-page-num">ii</div>
     </div>
 
   </div><!-- /toc-page -->
+  </div><!-- /toc-pages-container -->
 </div>
 
 
@@ -1810,15 +1828,19 @@
       `AASJ${dot}VOL. ${vol}${dot}NO. ${issue}${dot}${year}${dot}Archives of Agriculture Sciences Journal`;
 
     // TOC page — volume badge
-    document.getElementById('toc-vol-main').textContent =
-      `Vol. ${vol} \u00b7 No. ${issue}`;
-    document.getElementById('toc-vol-date').textContent = `${month} ${year}`;
+    document.querySelectorAll('.toc-vol-main').forEach(el => {
+      el.textContent = `Vol. ${vol} \u00b7 No. ${issue}`;
+    });
+    document.querySelectorAll('.toc-vol-date').forEach(el => {
+      el.textContent = `${month} ${year}`;
+    });
 
     // Copyright year — front cover, TOC, back cover
     document.getElementById('copyright-year-front').textContent =
       `\u00a9 ${copyYear} Al-Azhar University`;
-    document.getElementById('copyright-year-toc').textContent =
-      `\u00a9 ${copyYear} Faculty of Agriculture (Assiut Branch), Al-Azhar University, Egypt`;
+    document.querySelectorAll('.toc-copyright-year').forEach(el => {
+      el.textContent = `\u00a9 ${copyYear} Faculty of Agriculture (Assiut Branch), Al-Azhar University, Egypt`;
+    });
     document.getElementById('copyright-year-back').textContent =
       `\u00a9 ${copyYear} Faculty of Agriculture (Assiut Branch), Al-Azhar University`;
   }
@@ -2063,35 +2085,157 @@
     );
   }
 
-  /* Render articles into the TOC contents area */
-  function renderTocArticles(articles) {
-    const container = document.getElementById('toc-contents-area');
-    if (!container) return;
+  function buildArticleElement(art, num) {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = buildArticleHtml(art, num);
+    return wrapper.firstElementChild;
+  }
 
-    // Separate research from review articles
+  function toRomanNumeral(num) {
+    const numerals = [
+      [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
+      [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
+      [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
+    ];
+    const numericValue = Number(num);
+    const hasValidPageNumber = Number.isFinite(numericValue);
+    if (!hasValidPageNumber) {
+      console.warn('Invalid TOC page number received; defaulting to 1.', num);
+    }
+    const validatedValue = hasValidPageNumber ? Math.max(1, Math.floor(numericValue)) : 1;
+    let value = validatedValue;
+    let result = '';
+    numerals.forEach(([amount, symbol]) => {
+      while (value >= amount) {
+        result += symbol;
+        value -= amount;
+      }
+    });
+    return result.toLowerCase();
+  }
+
+  function getTocSectionGroups(articles) {
     const research = articles.filter(a => a.type !== 'review');
     const review   = articles.filter(a => a.type === 'review');
-    let html = '';
+    const groups = [];
 
     if (research.length) {
-      html += '<div class="toc-section-label">Research Articles</div>';
-      html += '<div class="toc-articles">';
-      research.forEach((art, i) => { html += buildArticleHtml(art, i + 1); });
-      html += '</div>';
+      groups.push({
+        label: 'Research Articles',
+        items: research.map((art, i) => ({ art, num: i + 1 }))
+      });
     }
 
     if (review.length) {
-      html += '<div class="toc-section-label">Review Articles</div>';
-      html += '<div class="toc-articles">';
-      review.forEach((art, i) => { html += buildArticleHtml(art, research.length + i + 1); });
-      html += '</div>';
+      groups.push({
+        label: 'Review Articles',
+        items: review.map((art, i) => ({ art, num: research.length + i + 1 }))
+      });
     }
 
-    if (!html) {
-      html = '<div style="padding:18px 36px;color:#aaa;font-size:12px;">No articles found.</div>';
+    return groups;
+  }
+
+  function createTocSectionBlock(labelText) {
+    const label = document.createElement('div');
+    label.className = 'toc-section-label';
+    label.textContent = labelText;
+
+    const list = document.createElement('div');
+    list.className = 'toc-articles';
+
+    return { label, list };
+  }
+
+  // Allow a tiny buffer for browser rounding/sub-pixel differences when comparing
+  // rendered content height against the fixed printable page height.
+  const TOC_OVERFLOW_TOLERANCE_PX = 1;
+  const TOC_START_PAGE_NUMBER = 2;
+
+  function isTocOverflowing(contentsEl) {
+    return contentsEl instanceof HTMLElement &&
+      contentsEl.scrollHeight > contentsEl.clientHeight + TOC_OVERFLOW_TOLERANCE_PX;
+  }
+
+  function createTocPageElement(templatePage, tocPageNumber) {
+    const page = templatePage.cloneNode(true);
+    page.removeAttribute('id');
+    page.removeAttribute('data-toc-page-template');
+
+    const contents = page.querySelector('.toc-contents-area');
+    if (contents) contents.innerHTML = '';
+
+    const pageNum = page.querySelector('.toc-page-num');
+    if (pageNum) pageNum.textContent = toRomanNumeral(tocPageNumber);
+
+    return page;
+  }
+
+  /* Render articles into the TOC contents area */
+  function renderTocArticles(articles) {
+    const pagesContainer = document.getElementById('toc-pages-container');
+    const templatePage = pagesContainer ? pagesContainer.querySelector('.toc-page') : null;
+    if (!pagesContainer || !templatePage) return;
+
+    const groups = getTocSectionGroups(articles);
+    pagesContainer.innerHTML = '';
+
+    let tocPageNumber = TOC_START_PAGE_NUMBER;
+    let currentPage = createTocPageElement(templatePage, tocPageNumber++);
+    pagesContainer.appendChild(currentPage);
+
+    let currentContents = currentPage.querySelector('.toc-contents-area');
+
+    if (!groups.length) {
+      currentContents.innerHTML = '<div style="padding:18px 36px;color:#aaa;font-size:12px;">No articles found.</div>';
+      updateCover();
+      return;
     }
 
-    container.innerHTML = html;
+    groups.forEach(group => {
+      let sectionBlock = null;
+
+      group.items.forEach(item => {
+        if (!sectionBlock) {
+          sectionBlock = createTocSectionBlock(group.label);
+          currentContents.appendChild(sectionBlock.label);
+          currentContents.appendChild(sectionBlock.list);
+
+          if (isTocOverflowing(currentContents)) {
+            sectionBlock.label.remove();
+            sectionBlock.list.remove();
+            currentPage = createTocPageElement(templatePage, tocPageNumber++);
+            pagesContainer.appendChild(currentPage);
+            currentContents = currentPage.querySelector('.toc-contents-area');
+            sectionBlock = createTocSectionBlock(group.label);
+            currentContents.appendChild(sectionBlock.label);
+            currentContents.appendChild(sectionBlock.list);
+          }
+        }
+
+        const articleEl = buildArticleElement(item.art, item.num);
+        sectionBlock.list.appendChild(articleEl);
+
+        if (isTocOverflowing(currentContents)) {
+          sectionBlock.list.removeChild(articleEl);
+          if (!sectionBlock.list.childElementCount) {
+            sectionBlock.label.remove();
+            sectionBlock.list.remove();
+          }
+
+          currentPage = createTocPageElement(templatePage, tocPageNumber++);
+          pagesContainer.appendChild(currentPage);
+          currentContents = currentPage.querySelector('.toc-contents-area');
+
+          sectionBlock = createTocSectionBlock(group.label);
+          currentContents.appendChild(sectionBlock.label);
+          currentContents.appendChild(sectionBlock.list);
+          sectionBlock.list.appendChild(articleEl);
+        }
+      });
+    });
+
+    updateCover();
   }
 
   /* Helper: collect all descendant elements matching a tag name in any namespace,
