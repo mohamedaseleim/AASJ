@@ -2098,6 +2098,9 @@
       [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
     ];
     const numericValue = Number(num);
+    if (!Number.isFinite(numericValue) || numericValue < 1) {
+      console.warn('Invalid TOC page number received; defaulting to 1.', num);
+    }
     let value = Number.isFinite(numericValue) ? Math.max(1, Math.floor(numericValue)) : 1;
     let result = '';
     numerals.forEach(([amount, symbol]) => {
@@ -2145,6 +2148,7 @@
   // Allow a tiny buffer for browser rounding/sub-pixel differences when comparing
   // rendered content height against the fixed printable page height.
   const TOC_OVERFLOW_TOLERANCE_PX = 1;
+  const TOC_START_PAGE_NUMBER = 2;
 
   function isTocOverflowing(contentsEl) {
     return !!contentsEl && contentsEl.scrollHeight > contentsEl.clientHeight + TOC_OVERFLOW_TOLERANCE_PX;
@@ -2173,7 +2177,7 @@
     const groups = getTocSectionGroups(articles);
     pagesContainer.innerHTML = '';
 
-    let tocPageNumber = 2;
+    let tocPageNumber = TOC_START_PAGE_NUMBER;
     let currentPage = createTocPageElement(templatePage, tocPageNumber++);
     pagesContainer.appendChild(currentPage);
 
