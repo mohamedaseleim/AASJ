@@ -2265,8 +2265,10 @@
     for (const tag of tagNames) {
       const nodes = getElsByTag(el, tag);
       for (let i = 0; i < nodes.length; i++) {
+        const text = nodes[i].textContent.trim();
         const formattedMarkup = sanitizeTitleMarkup(serializeNodeChildren(nodes[i]));
-        if (formattedMarkup || nodes[i].textContent.trim()) return formattedMarkup;
+        if (formattedMarkup) return formattedMarkup;
+        if (text) return escapeHtml(text);
       }
     }
     return '';
@@ -2768,8 +2770,7 @@
       .trim();
   }
 
-  function extractRawTagText(blockText, tagNames, options) {
-    const opts = options || {};
+  function extractRawTagText(blockText, tagNames, options = {}) {
     const source = String(blockText || '');
     for (const tagName of tagNames) {
       const escapedTag = escapeRegexLiteral(tagName);
@@ -2779,7 +2780,7 @@
       );
       const closedTagMatch = source.match(closedTagPattern);
       if (closedTagMatch && closedTagMatch[1]) {
-        const cleanedClosedText = opts.preserveFormatting
+        const cleanedClosedText = options.preserveFormatting
           ? sanitizeTitleMarkup(closedTagMatch[1])
           : cleanRawXmlText(closedTagMatch[1]);
         if (cleanedClosedText) return cleanedClosedText;
@@ -2791,7 +2792,7 @@
       );
       const openTagMatch = source.match(openTagPattern);
       if (openTagMatch && openTagMatch[1]) {
-        const cleanedOpenText = opts.preserveFormatting
+        const cleanedOpenText = options.preserveFormatting
           ? sanitizeTitleMarkup(openTagMatch[1])
           : cleanRawXmlText(openTagMatch[1]);
         if (cleanedOpenText) return cleanedOpenText;
