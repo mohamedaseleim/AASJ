@@ -2384,22 +2384,25 @@
       };
     }
 
+    const xmlArticles = parseArticles(xmlDoc);
     const htmlDoc = parser.parseFromString(candidate, 'text/html');
     const htmlArticles = parseArticles(htmlDoc);
     if (htmlArticles.length || htmlArticles._rawArticleCount) {
       return {
         doc: htmlDoc,
         articles: htmlArticles,
-        usedHtmlFallback: true,
-        parseError: new Error('XML parse error: ' + formatXmlParseErrorText(parseErr, maxParseErrLen))
+        usedHtmlFallback: true
       };
     }
 
     return {
       doc: xmlDoc,
-      articles: parseArticles(xmlDoc),
+      articles: xmlArticles,
       usedHtmlFallback: false,
-      parseError: new Error('XML parse error: ' + formatXmlParseErrorText(parseErr, maxParseErrLen))
+      parseError: new Error(
+        'Strict XML parse error: ' + formatXmlParseErrorText(parseErr, maxParseErrLen) +
+        '. HTML fallback also did not produce recognizable article data.'
+      )
     };
   }
 
