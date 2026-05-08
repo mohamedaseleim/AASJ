@@ -100,6 +100,10 @@
     overflow: hidden;
   }
 
+  .print-page {
+    display: none;
+  }
+
   .page::before {
     content: '';
     display: block;
@@ -108,20 +112,20 @@
   }
 
   .page-inner {
-    padding: 22mm 16mm 16mm;
+    padding: 14mm 12mm 10mm;
   }
 
   .masthead {
     border-bottom: 2px solid var(--stone-200);
-    padding-bottom: 14px;
-    margin-bottom: 18px;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
   }
 
   .eyebrow {
     color: var(--gold-500);
     letter-spacing: 2.6px;
     text-transform: uppercase;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     margin-bottom: 8px;
   }
@@ -129,7 +133,7 @@
   .masthead-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.3fr) minmax(240px, 0.7fr);
-    gap: 22px;
+    gap: 16px;
     align-items: end;
   }
 
@@ -137,45 +141,50 @@
     margin: 0 0 8px;
     font-family: 'Playfair Display', serif;
     color: var(--green-900);
-    font-size: 34px;
+    font-size: 28px;
     line-height: 1.08;
   }
 
   .masthead p {
     margin: 0;
     color: #374151;
-    line-height: 1.55;
-    font-size: 16px;
+    line-height: 1.45;
+    font-size: 14px;
   }
 
   .statement {
     background: linear-gradient(135deg, rgba(13, 59, 31, 0.06), rgba(201, 148, 26, 0.12));
     border: 1px solid rgba(201, 148, 26, 0.28);
     border-radius: 14px;
-    padding: 14px 16px;
+    padding: 10px 12px;
   }
 
   .statement strong {
     display: block;
     color: var(--green-900);
-    margin-bottom: 6px;
-    font-size: 14px;
+    margin-bottom: 4px;
+    font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 1.2px;
   }
 
   .board-layout {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    align-items: start;
   }
 
   .role-card {
     border: 1px solid var(--stone-200);
     border-radius: 14px;
-    padding: 14px;
+    padding: 10px;
     background: linear-gradient(180deg, #ffffff 0%, var(--stone-50) 100%);
     break-inside: avoid;
+  }
+
+  .role-card.full-span {
+    grid-column: 1 / -1;
   }
 
   .role-head {
@@ -183,21 +192,21 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 12px;
-    padding-bottom: 9px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
     border-bottom: 1px solid var(--stone-200);
   }
 
   .role-title {
     margin: 0;
     font-family: 'Playfair Display', serif;
-    font-size: 22px;
+    font-size: 16px;
     color: var(--green-900);
   }
 
   .role-meta {
     color: var(--stone-500);
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 600;
     text-align: right;
   }
@@ -207,7 +216,7 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    margin-top: 10px;
+    margin-top: 8px;
   }
 
   .tiny-btn {
@@ -215,9 +224,9 @@
     background: var(--stone-50);
     color: var(--green-900);
     border-radius: 999px;
-    padding: 6px 10px;
+    padding: 4px 8px;
     font: inherit;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     cursor: pointer;
   }
@@ -225,17 +234,29 @@
   .names-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    gap: 8px;
   }
 
   .field-label {
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     color: var(--stone-500);
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.5px;
     text-transform: uppercase;
+  }
+
+  .field.compact .field-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .name-input,
@@ -244,9 +265,14 @@
     border: 1px solid var(--stone-200);
     background: #fff;
     border-radius: 10px;
-    padding: 10px 12px;
+    padding: 7px 10px;
     font: inherit;
+    font-size: 13px;
     color: var(--ink-900);
+  }
+
+  .field.compact .name-input {
+    padding: 6px 9px;
   }
 
   .name-input:focus,
@@ -258,15 +284,15 @@
   .sections-admin-grid,
   .journal-sections-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .sector-card {
     background: #fff;
     border: 1px solid var(--stone-200);
     border-radius: 12px;
-    padding: 12px;
+    padding: 9px;
     break-inside: avoid;
   }
 
@@ -280,34 +306,197 @@
   .journal-section {
     border: 1px solid rgba(13, 59, 31, 0.1);
     border-radius: 12px;
-    padding: 12px 14px;
+    padding: 9px 10px;
     background: linear-gradient(180deg, rgba(13, 59, 31, 0.03), rgba(201, 148, 26, 0.06));
     color: var(--green-900);
     font-weight: 600;
-    line-height: 1.45;
+    line-height: 1.3;
+    font-size: 12px;
     break-inside: avoid;
   }
 
+  .member-list-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 8px;
+  }
+
   .footer-note {
-    margin-top: 16px;
-    padding-top: 12px;
+    margin-top: 10px;
+    padding-top: 8px;
     border-top: 1px solid var(--stone-200);
     color: var(--stone-500);
-    font-size: 13px;
+    font-size: 11px;
     display: flex;
     justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
   }
 
+  .print-inner {
+    padding: 12mm 10mm 9mm;
+    color: var(--ink-900);
+  }
+
+  .print-header {
+    border-bottom: 1px solid var(--stone-200);
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+  }
+
+  .print-header-top {
+    color: var(--gold-500);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .print-header-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-end;
+  }
+
+  .print-header h1 {
+    margin: 0;
+    color: var(--green-900);
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    line-height: 1.05;
+  }
+
+  .print-header p {
+    margin: 4px 0 0;
+    font-size: 10px;
+    line-height: 1.35;
+    max-width: 430px;
+  }
+
+  .print-note {
+    font-size: 9px;
+    line-height: 1.35;
+    text-align: right;
+    color: var(--stone-500);
+    max-width: 185px;
+  }
+
+  .print-section {
+    margin-bottom: 7px;
+    break-inside: avoid;
+  }
+
+  .print-section-title {
+    margin: 0 0 5px;
+    color: var(--green-900);
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+  }
+
+  .print-section-grid,
+  .print-bottom-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .print-role-block,
+  .print-card {
+    border: 1px solid var(--stone-200);
+    border-radius: 10px;
+    padding: 7px 8px;
+    background: linear-gradient(180deg, #fff 0%, var(--stone-50) 100%);
+    break-inside: avoid;
+  }
+
+  .print-role-head,
+  .print-card-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    border-bottom: 1px solid var(--stone-200);
+    padding-bottom: 3px;
+    margin-bottom: 4px;
+  }
+
+  .print-role-name,
+  .print-card-title {
+    font-weight: 700;
+    color: var(--green-900);
+    font-size: 11px;
+  }
+
+  .print-role-meta {
+    color: var(--stone-500);
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  .print-name-list,
+  .print-two-col-list {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 10px;
+    line-height: 1.3;
+    column-gap: 16px;
+  }
+
+  .print-two-col-list {
+    columns: 2;
+  }
+
+  .print-name-list li,
+  .print-two-col-list li {
+    margin-bottom: 2px;
+  }
+
+  .print-sectors-grid,
+  .print-journal-sections {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 8px;
+  }
+
+  .print-sector {
+    border: 1px solid rgba(13, 59, 31, 0.12);
+    border-radius: 9px;
+    padding: 6px 7px;
+    background: #fff;
+  }
+
+  .print-sector-title {
+    font-weight: 700;
+    color: var(--green-900);
+    font-size: 10px;
+    line-height: 1.2;
+    margin-bottom: 3px;
+  }
+
+  .print-sector-people,
+  .print-journal-section {
+    font-size: 9px;
+    line-height: 1.3;
+  }
+
+  .print-journal-section {
+    border: 1px solid rgba(13, 59, 31, 0.1);
+    border-radius: 9px;
+    padding: 6px 7px;
+    background: rgba(13, 59, 31, 0.03);
+  }
+
   @media (max-width: 860px) {
     body { padding: 16px 10px 28px; }
     .toolbar,
     .page { width: 100%; }
+    .board-layout,
     .masthead-grid,
     .names-grid,
     .sections-admin-grid,
-    .journal-sections-grid { grid-template-columns: 1fr; }
+    .journal-sections-grid,
+    .member-list-grid { grid-template-columns: 1fr; }
     .page-inner { padding: 18px; }
   }
 
@@ -322,17 +511,15 @@
       padding: 0;
     }
 
-    .toolbar { display: none !important; }
+    .toolbar,
+    .page { display: none !important; }
 
-    .page {
+    .print-page {
+      display: block !important;
       width: 210mm;
       min-height: 297mm;
       margin: 0;
       box-shadow: none;
-    }
-
-    .page-inner {
-      padding: 16mm 14mm 12mm;
     }
 
     .role-card,
@@ -385,6 +572,22 @@
       </footer>
     </div>
   </main>
+
+  <section class="print-page" id="print-page" aria-hidden="true">
+    <div class="print-inner">
+      <header class="print-header">
+        <div class="print-header-top">Archives of Agriculture Sciences Journal</div>
+        <div class="print-header-row">
+          <div>
+            <h1>Editorial Board · هيئة التحرير</h1>
+            <p>The editorial board includes scholars from different parts of the world and section administrators for all journal sectors.</p>
+          </div>
+          <div class="print-note">Printable summary generated automatically from the editable board template.</div>
+        </div>
+      </header>
+      <div id="print-page-content"></div>
+    </div>
+  </section>
 
 <script>
   const STORAGE_KEY = 'aasj-editorial-board-template-v1';
@@ -442,6 +645,7 @@
 
   function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    renderPrintLayout();
   }
 
   function updateRolePerson(roleIndex, personIndex, value) {
@@ -489,8 +693,9 @@
     render();
   }
 
-  function createInput(label, value, onInput, ariaLabel) {
+  function createInput(label, value, onInput, ariaLabel, options = {}) {
     const field = document.createElement('div');
+    field.className = options.compact ? 'field compact' : 'field';
     const labelEl = document.createElement('label');
     labelEl.className = 'field-label';
     labelEl.textContent = label;
@@ -499,6 +704,7 @@
     input.className = 'name-input';
     input.type = 'text';
     input.value = value;
+    input.placeholder = label;
     input.setAttribute('aria-label', ariaLabel);
     input.addEventListener('input', event => onInput(event.target.value));
 
@@ -509,6 +715,9 @@
   function renderRole(role, roleIndex) {
     const card = document.createElement('section');
     card.className = 'role-card';
+    if (role.key === 'editorialBoard' || role.key === 'advisoryBoard') {
+      card.classList.add('compact-list-card');
+    }
 
     const head = document.createElement('div');
     head.className = 'role-head';
@@ -516,7 +725,7 @@
     card.appendChild(head);
 
     const grid = document.createElement('div');
-    grid.className = 'names-grid';
+    grid.className = role.key === 'editorialBoard' || role.key === 'advisoryBoard' ? 'member-list-grid' : 'names-grid';
 
     role.people.forEach((person, personIndex) => {
       grid.appendChild(
@@ -524,7 +733,8 @@
           `Name ${personIndex + 1}`,
           person,
           value => updateRolePerson(roleIndex, personIndex, value),
-          `${role.title} name ${personIndex + 1}`
+          `${role.title} name ${personIndex + 1}`,
+          { compact: true }
         )
       );
     });
@@ -558,7 +768,7 @@
 
   function renderSectionAdministrativeEditors() {
     const card = document.createElement('section');
-    card.className = 'role-card';
+    card.className = 'role-card full-span';
 
     const head = document.createElement('div');
     head.className = 'role-head';
@@ -582,7 +792,7 @@
 
       const names = document.createElement('div');
       names.className = 'names-grid';
-      names.style.marginTop = '10px';
+      names.style.marginTop = '8px';
 
       sector.people.forEach((person, personIndex) => {
         names.appendChild(
@@ -590,7 +800,8 @@
             `Editor ${personIndex + 1}`,
             person,
             value => updateSectorPerson(sectorIndex, personIndex, value),
-            `${sector.title} administrative editor ${personIndex + 1}`
+            `${sector.title} administrative editor ${personIndex + 1}`,
+            { compact: true }
           )
         );
       });
@@ -624,7 +835,7 @@
 
   function renderSectionsList() {
     const card = document.createElement('section');
-    card.className = 'role-card';
+    card.className = 'role-card full-span';
 
     const head = document.createElement('div');
     head.className = 'role-head';
@@ -645,6 +856,129 @@
     return card;
   }
 
+  function createPrintSection(title) {
+    const section = document.createElement('section');
+    section.className = 'print-section';
+
+    const heading = document.createElement('h2');
+    heading.className = 'print-section-title';
+    heading.textContent = title;
+    section.appendChild(heading);
+    return section;
+  }
+
+  function createPrintRoleBlock(role) {
+    const card = document.createElement('div');
+    card.className = 'print-role-block';
+
+    const head = document.createElement('div');
+    head.className = 'print-role-head';
+
+    const name = document.createElement('div');
+    name.className = 'print-role-name';
+    name.textContent = role.title;
+
+    const meta = document.createElement('div');
+    meta.className = 'print-role-meta';
+    meta.textContent = role.meta;
+
+    head.append(name, meta);
+    card.appendChild(head);
+
+    const list = document.createElement('ol');
+    list.className = 'print-name-list';
+    role.people.forEach(person => {
+      const item = document.createElement('li');
+      item.textContent = person;
+      list.appendChild(item);
+    });
+    card.appendChild(list);
+    return card;
+  }
+
+  function createPrintBoardCard(role) {
+    const card = document.createElement('div');
+    card.className = 'print-card';
+
+    const head = document.createElement('div');
+    head.className = 'print-card-head';
+
+    const title = document.createElement('div');
+    title.className = 'print-card-title';
+    title.textContent = role.title;
+
+    const meta = document.createElement('div');
+    meta.className = 'print-role-meta';
+    meta.textContent = role.meta;
+
+    head.append(title, meta);
+    card.appendChild(head);
+
+    const list = document.createElement('ol');
+    list.className = 'print-two-col-list';
+    role.people.forEach(person => {
+      const item = document.createElement('li');
+      item.textContent = person;
+      list.appendChild(item);
+    });
+    card.appendChild(list);
+
+    return card;
+  }
+
+  function renderPrintLayout() {
+    const container = document.getElementById('print-page-content');
+    container.innerHTML = '';
+
+    const leadership = createPrintSection('Leadership Roles');
+    const leadershipGrid = document.createElement('div');
+    leadershipGrid.className = 'print-section-grid';
+    state.roles.slice(0, 6).forEach(role => leadershipGrid.appendChild(createPrintRoleBlock(role)));
+    leadership.appendChild(leadershipGrid);
+    container.appendChild(leadership);
+
+    const sectorsSection = createPrintSection('Section Administrative Editors');
+    const sectorsGrid = document.createElement('div');
+    sectorsGrid.className = 'print-sectors-grid';
+    state.sectors.forEach(sector => {
+      const card = document.createElement('div');
+      card.className = 'print-sector';
+
+      const title = document.createElement('div');
+      title.className = 'print-sector-title';
+      title.textContent = sector.title;
+
+      const people = document.createElement('div');
+      people.className = 'print-sector-people';
+      people.textContent = sector.people.join(' · ');
+
+      card.append(title, people);
+      sectorsGrid.appendChild(card);
+    });
+    sectorsSection.appendChild(sectorsGrid);
+    container.appendChild(sectorsSection);
+
+    const bottomGrid = document.createElement('div');
+    bottomGrid.className = 'print-bottom-grid';
+
+    const editorialCard = createPrintBoardCard(state.roles[6]);
+    const advisoryCard = createPrintBoardCard(state.roles[7]);
+    bottomGrid.append(editorialCard, advisoryCard);
+    container.appendChild(bottomGrid);
+
+    const journalSection = createPrintSection('Sections of Journals');
+    const journalGrid = document.createElement('div');
+    journalGrid.className = 'print-journal-sections';
+    state.sections.forEach(section => {
+      const item = document.createElement('div');
+      item.className = 'print-journal-section';
+      item.textContent = section;
+      journalGrid.appendChild(item);
+    });
+    journalSection.appendChild(journalGrid);
+    container.appendChild(journalSection);
+  }
+
   function render() {
     const boardLayout = document.getElementById('board-layout');
     boardLayout.innerHTML = '';
@@ -657,9 +991,11 @@
     boardLayout.appendChild(renderRole(state.roles[6], 6));
     boardLayout.appendChild(renderRole(state.roles[7], 7));
     boardLayout.appendChild(renderSectionsList());
+    renderPrintLayout();
   }
 
   document.getElementById('print-btn').addEventListener('click', async () => {
+    renderPrintLayout();
     if (document.fonts) {
       try {
         await document.fonts.ready;
