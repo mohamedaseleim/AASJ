@@ -67,6 +67,18 @@
     gap: 10px;
   }
 
+  .toolbar-status {
+    width: 100%;
+    color: #fde68a;
+    font-size: 13px;
+    line-height: 1.4;
+    display: none;
+  }
+
+  .toolbar-status.is-visible {
+    display: block;
+  }
+
   .btn {
     border: none;
     border-radius: 999px;
@@ -546,6 +558,7 @@
       <button class="btn btn-secondary" type="button" id="reset-btn">Reset Template</button>
       <button class="btn btn-primary" type="button" id="print-btn">Print / Save PDF</button>
     </div>
+    <div id="toolbar-status" class="toolbar-status" aria-live="polite"></div>
   </div>
 
   <main class="page">
@@ -642,6 +655,19 @@
   }
 
   let state = loadState();
+  let statusTimer = null;
+
+  function showStatus(message) {
+    const statusEl = document.getElementById('toolbar-status');
+    if (!statusEl) return;
+    statusEl.textContent = message;
+    statusEl.classList.add('is-visible');
+    if (statusTimer) clearTimeout(statusTimer);
+    statusTimer = window.setTimeout(() => {
+      statusEl.classList.remove('is-visible');
+      statusEl.textContent = '';
+    }, 2600);
+  }
 
   function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -657,6 +683,7 @@
     const role = state.roles[roleIndex];
     if (role.max && role.people.length >= role.max) {
       console.warn(`${role.title} has reached its maximum member count.`);
+      showStatus(`${role.title} already reached its maximum allowed members.`);
       return;
     }
     role.people.push(`Edit name ${role.people.length + 1}`);
