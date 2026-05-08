@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AASJ Editorial Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-900: #0d3b1f;
+    --green-800: #14532d;
+    --green-700: #1b5e20;
+    --gold-500: #c9941a;
+    --gold-400: #e8b84b;
+    --stone-50: #faf7f1;
+    --stone-100: #f3eee3;
+    --stone-200: #e5dcc8;
+    --stone-500: #7c7162;
+    --ink-900: #15202b;
+    --page-width: 210mm;
+    --page-min-height: 297mm;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Source Sans 3', sans-serif;
+    background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
+    color: var(--ink-900);
+    padding: 32px 18px 48px;
+  }
+
+  .toolbar {
+    width: min(1100px, 100%);
+    margin: 0 auto 22px;
+    background: #1f2937;
+    color: #fff;
+    border: 1px solid rgba(201, 148, 26, 0.3);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  }
+
+  .toolbar-copy h1 {
+    margin: 0 0 4px;
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: #fff;
+  }
+
+  .toolbar-copy p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.78);
+    line-height: 1.5;
+    max-width: 720px;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .btn {
+    border: none;
+    border-radius: 999px;
+    padding: 11px 18px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+
+  .btn:hover { transform: translateY(-1px); }
+
+  .btn-primary {
+    background: var(--gold-500);
+    color: var(--green-900);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .page {
+    width: min(var(--page-width), 100%);
+    min-height: var(--page-min-height);
+    margin: 0 auto;
+    background: #fff;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.38);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page::before {
+    content: '';
+    display: block;
+    height: 7px;
+    background: linear-gradient(90deg, var(--green-900) 0%, var(--green-700) 42%, var(--gold-500) 78%, var(--gold-400) 100%);
+  }
+
+  .page-inner {
+    padding: 22mm 16mm 16mm;
+  }
+
+  .masthead {
+    border-bottom: 2px solid var(--stone-200);
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+  }
+
+  .eyebrow {
+    color: var(--gold-500);
+    letter-spacing: 2.6px;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .masthead-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(240px, 0.7fr);
+    gap: 22px;
+    align-items: end;
+  }
+
+  .masthead h2 {
+    margin: 0 0 8px;
+    font-family: 'Playfair Display', serif;
+    color: var(--green-900);
+    font-size: 34px;
+    line-height: 1.08;
+  }
+
+  .masthead p {
+    margin: 0;
+    color: #374151;
+    line-height: 1.55;
+    font-size: 16px;
+  }
+
+  .statement {
+    background: linear-gradient(135deg, rgba(13, 59, 31, 0.06), rgba(201, 148, 26, 0.12));
+    border: 1px solid rgba(201, 148, 26, 0.28);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+
+  .statement strong {
+    display: block;
+    color: var(--green-900);
+    margin-bottom: 6px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+  }
+
+  .board-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .role-card {
+    border: 1px solid var(--stone-200);
+    border-radius: 14px;
+    padding: 14px;
+    background: linear-gradient(180deg, #ffffff 0%, var(--stone-50) 100%);
+    break-inside: avoid;
+  }
+
+  .role-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 9px;
+    border-bottom: 1px solid var(--stone-200);
+  }
+
+  .role-title {
+    margin: 0;
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--green-900);
+  }
+
+  .role-meta {
+    color: var(--stone-500);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .role-actions,
+  .sector-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .tiny-btn {
+    border: 1px solid rgba(13, 59, 31, 0.16);
+    background: var(--stone-50);
+    color: var(--green-900);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .names-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .field-label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--stone-500);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .name-input,
+  .sector-title-input {
+    width: 100%;
+    border: 1px solid var(--stone-200);
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font: inherit;
+    color: var(--ink-900);
+  }
+
+  .name-input:focus,
+  .sector-title-input:focus {
+    outline: 2px solid rgba(201, 148, 26, 0.32);
+    border-color: rgba(201, 148, 26, 0.6);
+  }
+
+  .sections-admin-grid,
+  .journal-sections-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .sector-card {
+    background: #fff;
+    border: 1px solid var(--stone-200);
+    border-radius: 12px;
+    padding: 12px;
+    break-inside: avoid;
+  }
+
+  .sector-card h4 {
+    margin: 0 0 10px;
+    color: var(--green-900);
+    font-size: 18px;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .journal-section {
+    border: 1px solid rgba(13, 59, 31, 0.1);
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: linear-gradient(180deg, rgba(13, 59, 31, 0.03), rgba(201, 148, 26, 0.06));
+    color: var(--green-900);
+    font-weight: 600;
+    line-height: 1.45;
+    break-inside: avoid;
+  }
+
+  .footer-note {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--stone-200);
+    color: var(--stone-500);
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 860px) {
+    body { padding: 16px 10px 28px; }
+    .toolbar,
+    .page { width: 100%; }
+    .masthead-grid,
+    .names-grid,
+    .sections-admin-grid,
+    .journal-sections-grid { grid-template-columns: 1fr; }
+    .page-inner { padding: 18px; }
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  @media print {
+    body {
+      background: #fff;
+      padding: 0;
+    }
+
+    .toolbar { display: none !important; }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0;
+      box-shadow: none;
+    }
+
+    .page-inner {
+      padding: 16mm 14mm 12mm;
+    }
+
+    .role-card,
+    .sector-card,
+    .journal-section {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .role-actions,
+    .sector-actions {
+      display: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-copy">
+      <h1>Editorial Board Template</h1>
+      <p>Editable and print-ready page for the AASJ editorial structure. Changes are saved automatically in this browser.</p>
+    </div>
+    <div class="toolbar-actions">
+      <button class="btn btn-secondary" type="button" id="reset-btn">Reset Template</button>
+      <button class="btn btn-primary" type="button" id="print-btn">Print / Save PDF</button>
+    </div>
+  </div>
+
+  <main class="page">
+    <div class="page-inner">
+      <header class="masthead">
+        <div class="eyebrow">Archives of Agriculture Sciences Journal</div>
+        <div class="masthead-grid">
+          <div>
+            <h2>Editorial Board<br>هيئة التحرير</h2>
+            <p>The editorial board brings together scholars from different parts of the world to support the journal's academic quality, peer-review standards, and disciplinary reach.</p>
+          </div>
+          <div class="statement">
+            <strong>Editorial Note</strong>
+            <div>Board membership is editable for each role below, with dedicated section administration for every journal sector.</div>
+          </div>
+        </div>
+      </header>
+
+      <section id="board-layout" class="board-layout" aria-label="Editorial board roles"></section>
+
+      <footer class="footer-note">
+        <span>Prepared for AASJ editorial use.</span>
+        <span>Edit fields, then print or save as PDF.</span>
+      </footer>
+    </div>
+  </main>
+
+<script>
+  const STORAGE_KEY = 'aasj-editorial-board-template-v1';
+
+  const sectionNames = [
+    'Agricultural Economics, Rural Sociology and Agricultural Extension',
+    'Animal and Poultry Production',
+    'Chemistry, Agricultural Microbiology, and Genetics',
+    'Dairy Science, Food Science and Technology',
+    'Plant Pathology and Plant Protection',
+    'Plant Production',
+    'Soils and Water, and Agricultural Engineering'
+  ];
+
+  function makeMembers(prefix, count) {
+    return Array.from({ length: count }, (_, index) => `${prefix} ${index + 1}`);
+  }
+
+  function createDefaultState() {
+    return {
+      roles: [
+        { key: 'chairperson', title: 'Chairperson', meta: '1 person', min: 1, max: 1, people: ['Edit name'] },
+        { key: 'editorInChief', title: 'Editor-in-Chief', meta: '1 person', min: 1, max: 1, people: ['Edit name'] },
+        { key: 'coEditorInChief', title: 'Co-Editor-in-Chief', meta: '2–3 persons', min: 2, max: 3, people: ['Edit name 1', 'Edit name 2'] },
+        { key: 'advisoryChair', title: 'Chair of the Advisory Board', meta: '1 person', min: 1, max: 1, people: ['Edit name'] },
+        { key: 'managingEditor', title: 'Managing Editor', meta: '1 person', min: 1, max: 1, people: ['Edit name'] },
+        { key: 'editorialSecretary', title: 'Editorial Secretary', meta: '1–2 persons', min: 1, max: 2, people: ['Edit name'] },
+        { key: 'editorialBoard', title: 'Editorial Board', meta: '14 persons', min: 14, max: 14, people: makeMembers('Editorial Board Member', 14) },
+        { key: 'advisoryBoard', title: 'Advisory Board', meta: '10 persons', min: 10, max: 10, people: makeMembers('Advisory Board Member', 10) }
+      ],
+      sectors: sectionNames.map(name => ({
+        title: name,
+        people: ['Edit name 1', 'Edit name 2']
+      })),
+      sections: [...sectionNames]
+    };
+  }
+
+  function loadState() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return createDefaultState();
+      const parsed = JSON.parse(saved);
+      if (!parsed || !Array.isArray(parsed.roles) || !Array.isArray(parsed.sectors) || !Array.isArray(parsed.sections)) {
+        return createDefaultState();
+      }
+      return parsed;
+    } catch (error) {
+      console.warn('Failed to load editorial board state:', error);
+      return createDefaultState();
+    }
+  }
+
+  let state = loadState();
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function updateRolePerson(roleIndex, personIndex, value) {
+    state.roles[roleIndex].people[personIndex] = value;
+    saveState();
+  }
+
+  function addRolePerson(roleIndex) {
+    const role = state.roles[roleIndex];
+    if (role.max && role.people.length >= role.max) return;
+    role.people.push(`Edit name ${role.people.length + 1}`);
+    saveState();
+    render();
+  }
+
+  function removeRolePerson(roleIndex) {
+    const role = state.roles[roleIndex];
+    if (role.people.length <= role.min) return;
+    role.people.pop();
+    saveState();
+    render();
+  }
+
+  function updateSectorTitle(sectorIndex, value) {
+    state.sectors[sectorIndex].title = value;
+    state.sections[sectorIndex] = value;
+    saveState();
+  }
+
+  function updateSectorPerson(sectorIndex, personIndex, value) {
+    state.sectors[sectorIndex].people[personIndex] = value;
+    saveState();
+  }
+
+  function addSectorPerson(sectorIndex) {
+    state.sectors[sectorIndex].people.push(`Edit name ${state.sectors[sectorIndex].people.length + 1}`);
+    saveState();
+    render();
+  }
+
+  function removeSectorPerson(sectorIndex) {
+    if (state.sectors[sectorIndex].people.length <= 2) return;
+    state.sectors[sectorIndex].people.pop();
+    saveState();
+    render();
+  }
+
+  function createInput(label, value, onInput, ariaLabel) {
+    const field = document.createElement('div');
+    const labelEl = document.createElement('label');
+    labelEl.className = 'field-label';
+    labelEl.textContent = label;
+
+    const input = document.createElement('input');
+    input.className = 'name-input';
+    input.type = 'text';
+    input.value = value;
+    input.setAttribute('aria-label', ariaLabel);
+    input.addEventListener('input', event => onInput(event.target.value));
+
+    field.append(labelEl, input);
+    return field;
+  }
+
+  function renderRole(role, roleIndex) {
+    const card = document.createElement('section');
+    card.className = 'role-card';
+
+    const head = document.createElement('div');
+    head.className = 'role-head';
+    head.innerHTML = `<h3 class="role-title">${role.title}</h3><div class="role-meta">${role.meta}</div>`;
+    card.appendChild(head);
+
+    const grid = document.createElement('div');
+    grid.className = 'names-grid';
+
+    role.people.forEach((person, personIndex) => {
+      grid.appendChild(
+        createInput(
+          `Name ${personIndex + 1}`,
+          person,
+          value => updateRolePerson(roleIndex, personIndex, value),
+          `${role.title} name ${personIndex + 1}`
+        )
+      );
+    });
+
+    card.appendChild(grid);
+
+    if (role.min !== role.max) {
+      const actions = document.createElement('div');
+      actions.className = 'role-actions';
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'tiny-btn';
+      addBtn.type = 'button';
+      addBtn.textContent = 'Add Person';
+      addBtn.disabled = Boolean(role.max && role.people.length >= role.max);
+      addBtn.addEventListener('click', () => addRolePerson(roleIndex));
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'tiny-btn';
+      removeBtn.type = 'button';
+      removeBtn.textContent = 'Remove Person';
+      removeBtn.disabled = role.people.length <= role.min;
+      removeBtn.addEventListener('click', () => removeRolePerson(roleIndex));
+
+      actions.append(addBtn, removeBtn);
+      card.appendChild(actions);
+    }
+
+    return card;
+  }
+
+  function renderSectionAdministrativeEditors() {
+    const card = document.createElement('section');
+    card.className = 'role-card';
+
+    const head = document.createElement('div');
+    head.className = 'role-head';
+    head.innerHTML = '<h3 class="role-title">Section Administrative Editor</h3><div class="role-meta">2+ persons per section</div>';
+    card.appendChild(head);
+
+    const grid = document.createElement('div');
+    grid.className = 'sections-admin-grid';
+
+    state.sectors.forEach((sector, sectorIndex) => {
+      const sectorCard = document.createElement('div');
+      sectorCard.className = 'sector-card';
+
+      const title = document.createElement('input');
+      title.className = 'sector-title-input';
+      title.type = 'text';
+      title.value = sector.title;
+      title.setAttribute('aria-label', `Section title ${sectorIndex + 1}`);
+      title.addEventListener('input', event => updateSectorTitle(sectorIndex, event.target.value));
+      sectorCard.appendChild(title);
+
+      const names = document.createElement('div');
+      names.className = 'names-grid';
+      names.style.marginTop = '10px';
+
+      sector.people.forEach((person, personIndex) => {
+        names.appendChild(
+          createInput(
+            `Editor ${personIndex + 1}`,
+            person,
+            value => updateSectorPerson(sectorIndex, personIndex, value),
+            `${sector.title} administrative editor ${personIndex + 1}`
+          )
+        );
+      });
+
+      sectorCard.appendChild(names);
+
+      const actions = document.createElement('div');
+      actions.className = 'sector-actions';
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'tiny-btn';
+      addBtn.type = 'button';
+      addBtn.textContent = 'Add Editor';
+      addBtn.addEventListener('click', () => addSectorPerson(sectorIndex));
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'tiny-btn';
+      removeBtn.type = 'button';
+      removeBtn.textContent = 'Remove Editor';
+      removeBtn.disabled = sector.people.length <= 2;
+      removeBtn.addEventListener('click', () => removeSectorPerson(sectorIndex));
+
+      actions.append(addBtn, removeBtn);
+      sectorCard.appendChild(actions);
+      grid.appendChild(sectorCard);
+    });
+
+    card.appendChild(grid);
+    return card;
+  }
+
+  function renderSectionsList() {
+    const card = document.createElement('section');
+    card.className = 'role-card';
+
+    const head = document.createElement('div');
+    head.className = 'role-head';
+    head.innerHTML = '<h3 class="role-title">Sections of Journals</h3><div class="role-meta">Journal sectors</div>';
+    card.appendChild(head);
+
+    const grid = document.createElement('div');
+    grid.className = 'journal-sections-grid';
+
+    state.sections.forEach(section => {
+      const item = document.createElement('div');
+      item.className = 'journal-section';
+      item.textContent = section;
+      grid.appendChild(item);
+    });
+
+    card.appendChild(grid);
+    return card;
+  }
+
+  function render() {
+    const boardLayout = document.getElementById('board-layout');
+    boardLayout.innerHTML = '';
+
+    state.roles.slice(0, 6).forEach((role, roleIndex) => {
+      boardLayout.appendChild(renderRole(role, roleIndex));
+    });
+
+    boardLayout.appendChild(renderSectionAdministrativeEditors());
+    boardLayout.appendChild(renderRole(state.roles[6], 6));
+    boardLayout.appendChild(renderRole(state.roles[7], 7));
+    boardLayout.appendChild(renderSectionsList());
+  }
+
+  document.getElementById('print-btn').addEventListener('click', async () => {
+    if (document.fonts) {
+      try {
+        await document.fonts.ready;
+      } catch (error) {
+        console.warn('Fonts did not finish loading before print:', error);
+      }
+    }
+    window.print();
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    if (!window.confirm('Reset all editorial board fields to the default template?')) return;
+    state = createDefaultState();
+    saveState();
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>
