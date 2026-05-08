@@ -629,7 +629,7 @@
   function loadState() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return createDefaultState();
+      if (saved === null) return createDefaultState();
       const parsed = JSON.parse(saved);
       if (!parsed || !Array.isArray(parsed.roles) || !Array.isArray(parsed.sectors) || !Array.isArray(parsed.sections)) {
         return createDefaultState();
@@ -655,7 +655,10 @@
 
   function addRolePerson(roleIndex) {
     const role = state.roles[roleIndex];
-    if (role.max && role.people.length >= role.max) return;
+    if (role.max && role.people.length >= role.max) {
+      console.warn(`${role.title} has reached its maximum member count.`);
+      return;
+    }
     role.people.push(`Edit name ${role.people.length + 1}`);
     saveState();
     render();
