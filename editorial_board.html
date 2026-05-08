@@ -556,6 +556,7 @@
   </section>
 
 <script>
+  // v2 removes the sections list and migrates the old two-person defaults to one-person defaults where requested.
   const STORAGE_KEY = 'aasj-editorial-board-template-v2';
   const LEGACY_STORAGE_KEY = 'aasj-editorial-board-template-v1';
 
@@ -574,20 +575,23 @@
   }
 
   function normalizePeople(people, fallbackPeople, min, max = null) {
+    const safeFallbackPeople = Array.isArray(fallbackPeople) && fallbackPeople.length
+      ? fallbackPeople
+      : ['Edit name'];
     const normalized = Array.isArray(people)
       ? people.filter(person => typeof person === 'string' && person.trim() !== '')
       : [];
 
     if (!normalized.length) {
-      normalized.push(...fallbackPeople);
+      normalized.push(...safeFallbackPeople);
     }
 
     while (normalized.length < min) {
-      normalized.push(fallbackPeople[normalized.length] || `Edit name ${normalized.length + 1}`);
+      normalized.push(safeFallbackPeople[normalized.length] || `Edit name ${normalized.length + 1}`);
     }
 
     if (max && normalized.length > max) {
-      return normalized.slice(0, max);
+      normalized.splice(max);
     }
 
     return normalized;
@@ -625,7 +629,7 @@
     return {
       roles: defaults.roles.map(defaultRole => {
         const existingRole = rolesByKey.get(defaultRole.key);
-        let people = normalizePeople(existingRole?.people, defaultRole.people, defaultRole.min, defaultRole.max ?? null);
+        let people = normalizePeople(existingRole?.people, defaultRole.people, defaultRole.min, defaultRole.max);
 
         if (legacyMode && defaultRole.key === 'coEditorInChief') {
           people = [people[0] || defaultRole.people[0]];
