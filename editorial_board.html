@@ -485,16 +485,16 @@
   }
 
   @media print {
-    html,
-    body {
-      width: var(--page-width);
-      min-width: var(--page-width);
+    html {
       min-height: var(--page-min-height);
     }
 
     body {
       background: #fff;
       padding: 0;
+      width: var(--page-width);
+      min-width: var(--page-width);
+      min-height: var(--page-min-height);
     }
 
     .toolbar,
@@ -934,6 +934,7 @@
 
     const list = document.createElement('ul');
     list.className = 'print-name-list';
+    list.setAttribute('role', 'list');
     role.people.forEach(person => {
       const item = document.createElement('li');
       item.textContent = person;
@@ -959,6 +960,7 @@
 
     const list = document.createElement('ul');
     list.className = 'print-name-list';
+    list.setAttribute('role', 'list');
     role.people.forEach(person => {
       const item = document.createElement('li');
       item.textContent = person;
