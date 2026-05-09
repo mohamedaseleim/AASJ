@@ -114,6 +114,9 @@
 
   .print-page {
     display: none;
+    width: var(--page-width);
+    max-width: var(--page-width);
+    min-height: var(--page-min-height);
   }
 
   .page::before {
@@ -337,6 +340,13 @@
     color: var(--ink-900);
   }
 
+  .print-page,
+  .print-page * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    forced-color-adjust: none;
+  }
+
   .print-header {
     border-bottom: 1px solid var(--stone-200);
     padding-bottom: 6px;
@@ -420,7 +430,8 @@
 
   .print-name-list {
     margin: 0;
-    padding-left: 16px;
+    padding-left: 0;
+    list-style: none;
     font-size: 10px;
     line-height: 1.3;
     column-gap: 16px;
@@ -474,9 +485,16 @@
   }
 
   @media print {
+    html {
+      min-height: var(--page-min-height);
+    }
+
     body {
       background: #fff;
       padding: 0;
+      width: var(--page-width);
+      min-width: var(--page-width);
+      min-height: var(--page-min-height);
     }
 
     .toolbar,
@@ -484,8 +502,8 @@
 
     .print-page {
       display: block !important;
-      width: 210mm;
-      min-height: 297mm;
+      width: var(--page-width);
+      min-height: var(--page-min-height);
       margin: 0;
       box-shadow: none;
     }
@@ -497,7 +515,9 @@
     }
 
     .role-actions,
-    .sector-actions {
+    .sector-actions,
+    .role-meta,
+    .print-role-meta {
       display: none !important;
     }
   }
@@ -909,14 +929,10 @@
     name.className = 'print-role-name';
     name.textContent = role.title;
 
-    const meta = document.createElement('div');
-    meta.className = 'print-role-meta';
-    meta.textContent = role.meta;
-
-    head.append(name, meta);
+    head.appendChild(name);
     card.appendChild(head);
 
-    const list = document.createElement('ol');
+    const list = document.createElement('ul');
     list.className = 'print-name-list';
     role.people.forEach(person => {
       const item = document.createElement('li');
@@ -938,14 +954,10 @@
     title.className = 'print-card-title';
     title.textContent = role.title;
 
-    const meta = document.createElement('div');
-    meta.className = 'print-role-meta';
-    meta.textContent = role.meta;
-
-    head.append(title, meta);
+    head.appendChild(title);
     card.appendChild(head);
 
-    const list = document.createElement('ol');
+    const list = document.createElement('ul');
     list.className = 'print-name-list';
     role.people.forEach(person => {
       const item = document.createElement('li');
