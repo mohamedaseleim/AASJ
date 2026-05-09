@@ -114,9 +114,9 @@
 
   .print-page {
     display: none;
-    width: 210mm;
-    max-width: 210mm;
-    min-height: 297mm;
+    width: var(--page-width);
+    max-width: var(--page-width);
+    min-height: var(--page-min-height);
   }
 
   .page::before {
@@ -487,8 +487,9 @@
   @media print {
     html,
     body {
-      width: 210mm;
-      min-width: 210mm;
+      width: var(--page-width);
+      min-width: var(--page-width);
+      min-height: var(--page-min-height);
     }
 
     body {
@@ -501,8 +502,8 @@
 
     .print-page {
       display: block !important;
-      width: 210mm;
-      min-height: 297mm;
+      width: var(--page-width);
+      min-height: var(--page-min-height);
       margin: 0;
       box-shadow: none;
     }
