@@ -3075,7 +3075,8 @@
   /* Main function: fetch XML and populate TOC */
   async function loadContentsFromXml() {
     const MAX_PARSE_ERR_LEN = 120;
-    const PROXY_TIMEOUT_MS  = 30000;
+    // Do not make the user wait several minutes when a public proxy is offline.
+    const PROXY_TIMEOUT_MS  = 12000;
 
     // Public CORS proxies tried in order — required for cross-origin requests from
     // a local file. Note: the XML URL is forwarded; avoid using for confidential content.
@@ -3129,6 +3130,13 @@
           if (!json || json.contents == null) throw new Error('Missing or invalid contents field in allorigins response.');
           return json.contents;
         }
+      },
+      {
+        // Kept as a last-resort public proxy. Some targets (including EKB) may
+        // return their bot-verification page through it rather than the XML.
+        label: 'corsproxy.org',
+        getUrl: enc => 'https://corsproxy.org/?url=' + enc,
+        extractText: r => r.text()
       }
     ];
 
@@ -3156,6 +3164,12 @@
       try {
         const text = await fetchViaProxy(proxy, encoded, PROXY_TIMEOUT_MS);
         if (!text || !text.trim()) throw new Error('The server returned an empty response.');
+        if (/(?:automated bots|bot verification|verify that you are human|support id)/i.test(text)) {
+          throw new Error(
+            'The source returned an anti-bot verification page instead of XML. ' +
+            'Open the URL in a normal browser and use Paste XML.'
+          );
+        }
         xmlText = text;
         break;
       } catch (err) {
@@ -3166,9 +3180,10 @@
     try {
       if (!xmlText) {
         throw new Error(
-          'تعذّر تحميل XML عبر جميع الوسطاء — آخر خطأ: ' + (lastError?.message || 'unknown') + '.  ' +
-          'الحل: افتح الرابط في المتصفح، انسخ كل المحتوى (Ctrl+A ثم Ctrl+C)، والصقه في حقل "Paste XML" أدناه.  ' +
-          '(Failed to fetch via all proxies. Workaround: open the URL in your browser, copy all content, and paste it in the "Paste XML" field below.)'
+          'تعذّر تحميل XML عبر الوسطاء. قد يكون الموقع يمنع الطلبات الآلية أو لا يسمح بـ CORS.  ' +
+          'افتح الرابط في متصفح عادي، وبعد اجتياز صفحة التحقق انسخ XML والصقه في حقل "Paste XML" أدناه.  ' +
+          'آخر خطأ: ' + (lastError?.message || 'unknown') + '.  ' +
+          '(The source blocked automated access or does not allow CORS. Open the URL in a normal browser, pass its verification page, then copy the XML into "Paste XML".)'
         );
       }
 
