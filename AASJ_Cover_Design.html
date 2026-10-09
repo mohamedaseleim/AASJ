@@ -358,10 +358,17 @@
   }
 
   /* Articles list */
-  .toc-articles { padding: 0 36px; display: flex; flex-direction: column; gap: 0; }
+  .toc-articles {
+    padding: 0 36px;
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 0;
+  }
 
   .toc-article {
     display: flex;
+    align-items: flex-start;
     gap: 0;
     padding: 13px 0;
     border-bottom: 1px solid rgba(0,0,0,0.07);
@@ -439,9 +446,9 @@
   .art-doi {
     font-size: 7.5px; color: #bbb;
     text-align: right; line-height: 1.4;
-    white-space: nowrap;
+    white-space: normal;
     word-break: normal;
-    overflow-wrap: normal;
+    overflow-wrap: anywhere;
   }
 
   /* TOC Footer — same brand footer */
@@ -2796,6 +2803,17 @@
       .trim();
   }
 
+  // HTML parsing does not honor XML self-closing syntax for custom elements:
+  // <FirstPage/> is treated as an opening tag and can swallow the rest of an
+  // article.  Expand self-closing XML elements before using the tolerant HTML
+  // parser for malformed pasted feeds.
+  function expandSelfClosingXmlTagsForHtml(text) {
+    return String(text || '').replace(
+      /<([A-Za-z_][\w:.-]*)(\s[^<>]*?)?\s*\/\s*>/g,
+      (match, name, attrs) => '<' + name + (attrs || '') + '></' + name + '>'
+    );
+  }
+
   function extractRawTagText(blockText, tagNames, options = {}) {
     const source = String(blockText || '');
     for (const tagName of tagNames) {
@@ -2877,7 +2895,7 @@
       : ['article_title', 'article-title', 'articletitle', 'title', 'titletext'];
 
     blocks.forEach(block => {
-      const blockDoc = parser.parseFromString(block, 'text/html');
+      const blockDoc = parser.parseFromString(expandSelfClosingXmlTagsForHtml(block), 'text/html');
       const blockEl = getElsByTag(blockDoc, blockTag)[0];
       if (!blockEl) return;
 
@@ -2931,7 +2949,14 @@
     const htmlDoc = parser.parseFromString(candidate, 'text/html');
     const htmlArticles = parseArticles(htmlDoc);
     const rawBlockArticles = parseArticlesFromRawBlocks(candidate, parser);
-    if (rawBlockArticles.length > htmlArticles.length && hasUsableRecoveredArticleTitles(rawBlockArticles)) {
+    // A pasted feed can contain XML-invalid characters in an abstract (for example
+    // "P < 0.01").  The HTML parser may still return article-looking nodes, but it
+    // can silently re-parent or discard fields after that character.  Prefer the
+    // block recovery whenever it found a complete, usable set of article titles.
+    // This keeps all articles and their boundaries instead of trusting a partial
+    // HTML interpretation merely because it returned the same number of nodes.
+    if (hasUsableRecoveredArticleTitles(rawBlockArticles) &&
+        rawBlockArticles.length >= htmlArticles.length) {
       return {
         doc: htmlDoc,
         articles: rawBlockArticles,
