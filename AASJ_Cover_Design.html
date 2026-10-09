@@ -872,22 +872,8 @@
   .xml-status.error   { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.05); }
   .xml-status.loading { color: #fbbf24; border-color: rgba(251,191,36,0.3);  background: rgba(251,191,36,0.05);  }
 
-  /* Lightweight access gate for the static GitHub Pages build. */
-  body.auth-locked > *:not(#auth-gate) { display: none !important; }
-  #auth-gate {
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    padding: 24px; background: radial-gradient(circle at 20% 15%, rgba(201,148,26,0.16), transparent 34%), linear-gradient(145deg, #071f0d 0%, #0D3B1F 55%, #111827 100%); color: #fff;
-  }
-  .auth-card { width: min(420px, 100%); padding: 34px; background: rgba(17,24,39,0.94); border: 1px solid rgba(201,148,26,0.55); border-top: 4px solid #C9941A; border-radius: 6px; box-shadow: 0 24px 70px rgba(0,0,0,0.45); }
-  .auth-card h1 { margin: 0 0 8px; color: #E8B84B; font-family: 'Playfair Display', serif; font-size: 25px; }
-  .auth-card p { margin: 0 0 24px; color: rgba(255,255,255,0.68); line-height: 1.5; }
-  .auth-field { display: block; margin: 14px 0; }
-  .auth-field span { display: block; margin-bottom: 6px; font-size: 12px; color: rgba(255,255,255,0.72); }
-  .auth-field input { width: 100%; padding: 11px 12px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.2); border-radius: 3px; background: #fff; color: #111827; font-size: 14px; }
-  .auth-submit { width: 100%; margin-top: 10px; }
-  .auth-error { min-height: 20px; margin: 12px 0 0 !important; color: #f87171 !important; font-size: 12px; }
   #auth-logout { position: fixed; z-index: 20; top: 12px; right: 16px; padding: 6px 11px; border: 1px solid rgba(201,148,26,0.55); border-radius: 3px; background: #1f2937; color: #E8B84B; cursor: pointer; font-size: 11px; }
-  @media print { #auth-gate, #auth-logout { display: none !important; } }
+  @media print { #auth-logout { display: none !important; } }
 
   @page {
     size: A4 portrait;
@@ -1003,25 +989,6 @@
 </style>
 </head>
 <body class="auth-locked">
-
-<section id="auth-gate" aria-label="Restricted access">
-  <div class="auth-card">
-    <h1>AASJ Cover</h1>
-    <p>هذه الصفحة مخصصة للمستخدم المصرح له فقط. يرجى تسجيل الدخول للمتابعة.</p>
-    <form id="auth-form" autocomplete="on">
-      <label class="auth-field">
-        <span>اسم المستخدم</span>
-        <input id="auth-username" name="username" type="text" autocomplete="username" required>
-      </label>
-      <label class="auth-field">
-        <span>كلمة المرور</span>
-        <input id="auth-password" name="password" type="password" autocomplete="current-password" required>
-      </label>
-      <button class="ctrl-btn auth-submit" type="submit">تسجيل الدخول</button>
-      <p id="auth-error" class="auth-error" role="alert" aria-live="polite"></p>
-    </form>
-  </div>
-</section>
 
 <!-- Shared Al-Azhar University seal symbol (hidden, referenced via <use>) -->
 <svg style="display:none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -2014,19 +1981,7 @@
 </div>
 
 <script>
-  /* Access gate: this is a casual-use deterrent for a static GitHub Pages site,
-     not a substitute for server-side authentication. */
-  const AUTH_USERNAME_SHA256 = '4f8189c573917bc78f3557f1f10840524c1912d770ae9957cad5dfaff7cb9507';
-  const AUTH_PASSWORD_SHA256 = '5412ca525db71f13e460e124b5894dbbb3403738c6acb87f0f79b962d707be10';
   const AUTH_SESSION_KEY = 'aasj-cover-authenticated-v1';
-
-  async function sha256Hex(value) {
-    const bytes = new TextEncoder().encode(value);
-    const digest = await crypto.subtle.digest('SHA-256', bytes);
-    return Array.from(new Uint8Array(digest))
-      .map(byte => byte.toString(16).padStart(2, '0'))
-      .join('');
-  }
 
   function setAuthenticatedState(authenticated) {
     document.body.classList.toggle('auth-locked', !authenticated);
@@ -2041,47 +1996,20 @@
       logout.textContent = 'تسجيل الخروج';
       logout.addEventListener('click', () => {
         sessionStorage.removeItem(AUTH_SESSION_KEY);
-        window.location.reload();
+        window.location.replace('./login.html');
       });
       document.body.appendChild(logout);
     }
     if (logout) logout.hidden = !authenticated;
   }
 
-  async function handleAuthSubmit(event) {
-    event.preventDefault();
-    const usernameInput = document.getElementById('auth-username');
-    const passwordInput = document.getElementById('auth-password');
-    const error = document.getElementById('auth-error');
-    const submit = document.querySelector('.auth-submit');
-    if (submit) submit.disabled = true;
-    if (error) error.textContent = '';
-
-    try {
-      const [usernameHash, passwordHash] = await Promise.all([
-        sha256Hex(usernameInput.value.trim()),
-        sha256Hex(passwordInput.value)
-      ]);
-      if (usernameHash !== AUTH_USERNAME_SHA256 || passwordHash !== AUTH_PASSWORD_SHA256) {
-        throw new Error('بيانات الدخول غير صحيحة.');
-      }
-      sessionStorage.setItem(AUTH_SESSION_KEY, '1');
-      setAuthenticatedState(true);
-      document.getElementById('ctrl-vol')?.focus();
-    } catch (err) {
-      if (error) error.textContent = err.message || 'تعذر تسجيل الدخول.';
-      passwordInput.value = '';
-      passwordInput.focus();
-    } finally {
-      if (submit) submit.disabled = false;
-    }
-  }
-
   document.addEventListener('DOMContentLoaded', () => {
     const authenticated = sessionStorage.getItem(AUTH_SESSION_KEY) === '1';
+    if (!authenticated) {
+      window.location.replace('./login.html');
+      return;
+    }
     setAuthenticatedState(authenticated);
-    const form = document.getElementById('auth-form');
-    if (form) form.addEventListener('submit', handleAuthSubmit);
   });
 
   function updateDocumentTitle() {

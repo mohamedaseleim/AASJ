@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AASJ Cover – تسجيل الدخول</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --green: #0D3B1F; --gold: #C9941A; --gold-light: #E8B84B; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      min-height: 100vh; margin: 0; padding: 24px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-family: 'Source Sans 3', Tahoma, Arial, sans-serif;
+      background: radial-gradient(circle at 20% 15%, rgba(201,148,26,0.16), transparent 34%), linear-gradient(145deg, #071f0d 0%, var(--green) 55%, #111827 100%);
+    }
+    .auth-card {
+      width: min(420px, 100%); padding: 34px; direction: rtl;
+      background: rgba(17,24,39,0.96); border: 1px solid rgba(201,148,26,0.55);
+      border-top: 4px solid var(--gold); border-radius: 6px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.45);
+    }
+    .brand { margin-bottom: 26px; text-align: center; }
+    .brand h1 { margin: 0 0 7px; color: var(--gold-light); font-family: 'Playfair Display', serif; font-size: 28px; direction: ltr; }
+    .brand p { margin: 0; color: rgba(255,255,255,0.68); line-height: 1.6; }
+    label { display: block; margin: 15px 0; }
+    label span { display: block; margin-bottom: 7px; color: rgba(255,255,255,0.78); font-size: 13px; }
+    input { width: 100%; padding: 11px 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 3px; background: #fff; color: #111827; font: inherit; direction: ltr; text-align: left; }
+    input:focus { outline: 2px solid rgba(232,184,75,0.7); outline-offset: 1px; }
+    button { width: 100%; margin-top: 10px; padding: 10px 18px; border: 0; border-radius: 3px; background: var(--gold); color: var(--green); cursor: pointer; font: 800 13px 'Source Sans 3', Tahoma, Arial, sans-serif; }
+    button:hover { background: var(--gold-light); }
+    button:disabled { background: #666; color: #bbb; cursor: wait; }
+    .error { min-height: 22px; margin: 13px 0 0; color: #f87171; font-size: 13px; text-align: center; }
+  </style>
+</head>
+<body>
+  <main class="auth-card">
+    <div class="brand">
+      <h1>AASJ Cover</h1>
+      <p>هذه الصفحة مخصصة للمستخدم المصرح له فقط.<br>يرجى تسجيل الدخول للمتابعة.</p>
+    </div>
+    <form id="login-form" autocomplete="on">
+      <label>
+        <span>اسم المستخدم</span>
+        <input id="username" name="username" type="text" autocomplete="username" required autofocus>
+      </label>
+      <label>
+        <span>كلمة المرور</span>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button id="login-button" type="submit">تسجيل الدخول</button>
+      <p id="login-error" class="error" role="alert" aria-live="polite"></p>
+    </form>
+  </main>
+  <script>
+    const AUTH_USERNAME_SHA256 = '4f8189c573917bc78f3557f1f10840524c1912d770ae9957cad5dfaff7cb9507';
+    const AUTH_PASSWORD_SHA256 = '5412ca525db71f13e460e124b5894dbbb3403738c6acb87f0f79b962d707be10';
+    const AUTH_SESSION_KEY = 'aasj-cover-authenticated-v1';
+
+    async function sha256Hex(value) {
+      const bytes = new TextEncoder().encode(value);
+      const digest = await crypto.subtle.digest('SHA-256', bytes);
+      return Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+
+    if (sessionStorage.getItem(AUTH_SESSION_KEY) === '1') {
+      window.location.replace('./AASJ_Cover_Design.html');
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const username = document.getElementById('username');
+      const password = document.getElementById('password');
+      const button = document.getElementById('login-button');
+      const error = document.getElementById('login-error');
+      button.disabled = true;
+      error.textContent = '';
+
+      try {
+        const [usernameHash, passwordHash] = await Promise.all([
+          sha256Hex(username.value.trim()),
+          sha256Hex(password.value)
+        ]);
+        if (usernameHash !== AUTH_USERNAME_SHA256 || passwordHash !== AUTH_PASSWORD_SHA256) {
+          throw new Error('اسم المستخدم أو كلمة المرور غير صحيحة.');
+        }
+        sessionStorage.setItem(AUTH_SESSION_KEY, '1');
+        window.location.replace('./AASJ_Cover_Design.html');
+      } catch (err) {
+        error.textContent = err.message || 'تعذر تسجيل الدخول.';
+        password.value = '';
+        password.focus();
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
