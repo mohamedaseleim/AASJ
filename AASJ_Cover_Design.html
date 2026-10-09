@@ -985,6 +985,22 @@
       break-after: auto;
       page-break-after: auto;
     }
+
+    /* Selective cover printing: hide all non-selected wrappers. */
+    body.print-front .cover-wrapper-toc,
+    body.print-front .cover-wrapper-back,
+    body.print-back .cover-wrapper-front,
+    body.print-back .cover-wrapper-toc {
+      display: none !important;
+    }
+    body.print-front .cover-wrapper-front,
+    body.print-back .cover-wrapper-back {
+      display: block !important;
+      width: 210mm !important;
+      max-width: 210mm !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
   }
 </style>
 </head>
@@ -1334,6 +1350,8 @@
   <div class="controls-title">◆ Print / PDF Export</div>
   <div class="export-actions">
     <button id="ctrl-print-btn" class="ctrl-btn" type="button" onclick="printOrSavePdf()">Print / Save PDF</button>
+    <button id="ctrl-print-front-btn" class="ctrl-btn secondary" type="button" onclick="printSelectedCover('front')">Print Front Cover</button>
+    <button id="ctrl-print-back-btn" class="ctrl-btn secondary" type="button" onclick="printSelectedCover('back')">Print Back Cover</button>
     <button id="ctrl-editorial-board-btn" class="ctrl-btn secondary" type="button">Editorial Board Page</button>
     <div class="export-note">
       <span lang="ar" dir="rtl">لطباعة الصفحات أو حفظها كملف PDF بأعلى جودة، افتح نافذة الطباعة ثم فعّل <strong>Background graphics</strong> واترك <strong>Scale</strong> على <strong>100%</strong>.</span>
@@ -1344,7 +1362,7 @@
 <!-- ════════════════════════════════════════════
      BLOCK 1 : FRONT COVER
 ════════════════════════════════════════════ -->
-<div class="cover-wrapper">
+<div class="cover-wrapper cover-wrapper-front">
   <div class="design-label">◆ Front Cover</div>
   <div class="covers-row">
 
@@ -1620,7 +1638,7 @@
 <!-- ════════════════════════════════════════════
      BLOCK 2 : TOC PAGE (independent)
 ════════════════════════════════════════════ -->
-<div class="cover-wrapper">
+<div class="cover-wrapper cover-wrapper-toc">
   <div class="design-label">◆ Table of Contents — Separate Page</div>
 
   <div id="toc-pages-container">
@@ -1840,7 +1858,7 @@
 <!-- ════════════════════════════════════════════
      BLOCK 3 : BACK COVER
 ════════════════════════════════════════════ -->
-<div class="cover-wrapper">
+<div class="cover-wrapper cover-wrapper-back">
   <div class="design-label">◆ Back Cover</div>
 
   <div class="cover-back page-surface">
@@ -2055,10 +2073,24 @@
   }
 
   async function printOrSavePdf() {
+    document.body.classList.remove('print-front', 'print-back');
     prepareForPrint();
     await waitForPrintLayout();
     window.print();
   }
+
+  async function printSelectedCover(cover) {
+    if (cover !== 'front' && cover !== 'back') return;
+    document.body.classList.remove('print-front', 'print-back');
+    document.body.classList.add('print-' + cover);
+    prepareForPrint();
+    await waitForPrintLayout();
+    window.print();
+  }
+
+  window.addEventListener('afterprint', () => {
+    document.body.classList.remove('print-front', 'print-back');
+  });
 
   function updateCover() {
     const vol   = document.getElementById('ctrl-vol').value;
