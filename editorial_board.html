@@ -202,6 +202,18 @@
     grid-column: 1 / -1;
   }
 
+  .section-editors-group {
+    background: linear-gradient(135deg, rgba(13, 59, 31, 0.055), rgba(201, 148, 26, 0.10));
+    border-color: rgba(201, 148, 26, 0.34);
+    padding: 12px;
+  }
+
+  .section-editors-group .role-head {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom-color: rgba(201, 148, 26, 0.36);
+  }
+
   .role-head {
     display: flex;
     align-items: center;
@@ -520,6 +532,11 @@
     .print-role-meta {
       display: none !important;
     }
+
+    /* Keep Leadership Roles on screen, but omit its heading and six cards from print. */
+    .print-leadership-section {
+      display: none !important;
+    }
   }
 </style>
 </head>
@@ -627,7 +644,9 @@
         { key: 'managingEditor', title: 'Managing Editor', meta: '1 person', min: 1, max: 1, people: ['Edit name'] },
         { key: 'editorialSecretary', title: 'Editorial Secretary', meta: '1–2 persons', min: 1, max: 2, people: ['Edit name'] },
         { key: 'editorialBoard', title: 'Editorial Board', meta: 'Minimum 5 persons', min: 5, people: makeMembers('Editorial Board Member', 5) },
-        { key: 'advisoryBoard', title: 'Advisory Board', meta: 'Minimum 5 persons', min: 5, people: makeMembers('Advisory Board Member', 5) }
+        { key: 'advisoryBoard', title: 'Advisory Board', meta: 'Minimum 5 persons', min: 5, people: makeMembers('Advisory Board Member', 5) },
+        { key: 'productionEditors', title: 'Production Editors', meta: 'Minimum 1 person', min: 1, people: ['Edit name'] },
+        { key: 'layoutEditors', title: 'Layout Editors', meta: 'Minimum 1 person', min: 1, people: ['Edit name'] }
       ],
       sectors: sectionNames.map(name => ({
         title: name,
@@ -842,11 +861,11 @@
 
   function renderSectionAdministrativeEditors() {
     const card = document.createElement('section');
-    card.className = 'role-card full-span';
+    card.className = 'role-card full-span section-editors-group';
 
     const head = document.createElement('div');
     head.className = 'role-head';
-    head.innerHTML = '<h3 class="role-title">Section Administrative Editor</h3><div class="role-meta">1+ person per section</div>';
+    head.innerHTML = '<h3 class="role-title">Executive Section Editors</h3><div class="role-meta">1+ person per section</div>';
     card.appendChild(head);
 
     const grid = document.createElement('div');
@@ -974,13 +993,14 @@
     container.innerHTML = '';
 
     const leadership = createPrintSection('Leadership Roles');
+    leadership.classList.add('print-leadership-section');
     const leadershipGrid = document.createElement('div');
     leadershipGrid.className = 'print-section-grid';
     state.roles.slice(0, 6).forEach(role => leadershipGrid.appendChild(createPrintRoleBlock(role)));
     leadership.appendChild(leadershipGrid);
     container.appendChild(leadership);
 
-    const sectorsSection = createPrintSection('Section Administrative Editors');
+    const sectorsSection = createPrintSection('Executive Section Editors');
     const sectorsGrid = document.createElement('div');
     sectorsGrid.className = 'print-sectors-grid';
     state.sectors.forEach(sector => {
@@ -1006,7 +1026,9 @@
 
     const editorialCard = createPrintBoardCard(state.roles[6]);
     const advisoryCard = createPrintBoardCard(state.roles[7]);
-    bottomGrid.append(editorialCard, advisoryCard);
+    const productionCard = createPrintBoardCard(state.roles[8]);
+    const layoutCard = createPrintBoardCard(state.roles[9]);
+    bottomGrid.append(editorialCard, advisoryCard, productionCard, layoutCard);
     container.appendChild(bottomGrid);
 
   }
@@ -1022,6 +1044,8 @@
     boardLayout.appendChild(renderSectionAdministrativeEditors());
     boardLayout.appendChild(renderRole(state.roles[6], 6));
     boardLayout.appendChild(renderRole(state.roles[7], 7));
+    boardLayout.appendChild(renderRole(state.roles[8], 8));
+    boardLayout.appendChild(renderRole(state.roles[9], 9));
     renderPrintLayout();
   }
 
