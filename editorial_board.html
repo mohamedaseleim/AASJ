@@ -394,6 +394,19 @@
     break-inside: avoid;
   }
 
+  .print-executive-section {
+    padding: 8px 9px 9px;
+    border: 1px solid rgba(201, 148, 26, 0.34);
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(13, 59, 31, 0.045), rgba(201, 148, 26, 0.075));
+  }
+
+  .print-executive-section .print-section-title {
+    margin-bottom: 7px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(201, 148, 26, 0.34);
+  }
+
   .print-section-title {
     margin: 0 0 5px;
     color: var(--green-900);
@@ -534,7 +547,8 @@
     }
 
     /* Keep Leadership Roles on screen, but omit its heading and six cards from print. */
-    .print-leadership-section {
+    .print-leadership-section,
+    #print-page-content > .print-leadership-section {
       display: none !important;
     }
   }
@@ -1001,6 +1015,7 @@
     container.appendChild(leadership);
 
     const sectorsSection = createPrintSection('Executive Section Editors');
+    sectorsSection.classList.add('print-executive-section');
     const sectorsGrid = document.createElement('div');
     sectorsGrid.className = 'print-sectors-grid';
     state.sectors.forEach(sector => {
